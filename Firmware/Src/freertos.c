@@ -144,6 +144,7 @@ void StartDefaultTask(void const * argument)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
   uint16_t counter = 800;
+  mpu9250_initialize();
   volatile uint8_t status2 = bmp280_init();
   for(;;)
   {
@@ -158,7 +159,8 @@ void StartDefaultTask(void const * argument)
       counter++;
     }
 
-    volatile uint8_t status1 = mpu9250_testConnection();
+    volatile int16_t ax, ay, az, rotx, roty, rotz, mgx, mgy, mgz;
+    mpu9250_getMotion9(&ax, &ay, &az, &rotx, &roty, &rotz, &mgx, &mgy, &mgz);
     volatile float temp = bmp280_getTemperature();
     volatile float pressure = bmp280_getPressure();
     volatile float height = bmp280_calcAltitude(pressure);

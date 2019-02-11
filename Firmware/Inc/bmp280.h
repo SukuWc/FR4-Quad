@@ -40,7 +40,7 @@
 
 uint16_t bmp280_bmp280Read16LE(uint8_t reg);
 uint16_t bmp280_bmp280Read16(uint8_t reg);
-uint32_t bmp280_bmp280Read24(uint8_t reg);
+int32_t bmp280_bmp280Read24(uint8_t reg);
 uint8_t bmp280_bmp280Read8(uint8_t reg);
 int16_t bmp280_bmp280ReadS16(uint8_t reg);
 int16_t bmp280_bmp280ReadS16LE(uint8_t reg);
