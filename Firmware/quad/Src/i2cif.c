@@ -252,12 +252,12 @@ uint8_t i2c_writeWord(I2C_HandleTypeDef *i2c,uint8_t devAddr, uint8_t regAddr, u
  * @return Status of operation (true = success)
  */
 uint8_t i2c_writeBytes(I2C_HandleTypeDef *i2c,uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) {
-  uint8_t buffer[256];
+  static uint8_t buffer[256];
   buffer[0] = regAddr;
   for (uint8_t i = 0; i < length; i++){
     buffer[i + 1] = data[i];
   }
-  if (HAL_I2C_Master_Transmit(i2c, devAddr << 1, buffer, length, HAL_MAX_DELAY) == HAL_OK){
+  if (HAL_I2C_Master_Transmit(i2c, devAddr << 1, buffer, length + 1, HAL_MAX_DELAY) == HAL_OK){
     return 1;
   } else {
     return 0;

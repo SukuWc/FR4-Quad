@@ -49,9 +49,9 @@ uint8_t bmp280_init(void)
 
 float bmp280_getTemperature(void)
 {
-  int32_t var1, var2;
+  volatile int32_t var1, var2;
 
-  int32_t adc_T = bmp280_bmp280Read24(BMP280_REG_TEMPDATA);
+  volatile int32_t adc_T = bmp280_bmp280Read24(BMP280_REG_TEMPDATA);
   adc_T >>= 4;
   var1 = (((adc_T >> 3) - ((int32_t)(dig_T1 << 1))) *
     ((int32_t)dig_T2)) >> 11;
@@ -62,7 +62,7 @@ float bmp280_getTemperature(void)
 
   t_fine = var1 + var2;
   float T = (t_fine * 5 + 128) >> 8;
-  return T/100;
+  return T / 100;
 }
 
 float bmp280_getPressure(void)
@@ -109,8 +109,11 @@ uint8_t bmp280_bmp280Read8(uint8_t reg)
 
 uint16_t bmp280_bmp280Read16(uint8_t reg)
 {
-  uint16_t ret;
-  i2c_readWord(I2C_HANDLE, BMP280_ADDRESS, reg, &ret);
+  uint8_t buffer[2];
+  i2c_readWord(I2C_HANDLE, BMP280_ADDRESS, reg, buffer);
+  uint16_t ret = 0;
+  ret |= buffer[1];
+  ret |= buffer[2];
   return ret;
 }
 
@@ -130,11 +133,16 @@ int16_t bmp280_bmp280ReadS16LE(uint8_t reg)
   return (int16_t)bmp280_bmp280Read16LE(reg);
 }
 
-uint32_t bmp280_bmp280Read24(uint8_t reg)
+int32_t bmp280_bmp280Read24(uint8_t reg)
 {
-  uint32_t data;
-  i2c_readBytes(I2C_HANDLE, BMP280_ADDRESS, reg, 3, (uint8_t*)&data);
-  return data;
+  uint8_t buffer[4];
+  i2c_readBytes(I2C_HANDLE, BMP280_ADDRESS, reg, 3, buffer);
+  uint32_t ret = 0;
+  ret |= buffer[0] << 24;
+  ret |= buffer[1] << 16;
+  ret |= buffer[2] << 8;
+  ret >>= 8;
+  return ret;
 }
 
 void bmp280_writeRegister(uint8_t reg, uint8_t val)
