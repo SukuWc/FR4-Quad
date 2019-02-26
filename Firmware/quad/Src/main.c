@@ -127,7 +127,6 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
-  //MX_I2C1_Init();
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_TIM2_Init();
@@ -135,8 +134,9 @@ int main(void)
   MX_TIM4_Init();
   MX_USART1_UART_Init();
   MX_USB_PCD_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -206,6 +206,38 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+static volatile uint8_t index;
+static volatile uint16_t values[8];
+static volatile uint16_t rawvalues[8];
+volatile uint16_t motorValue;
+volatile uint8_t motorValid;
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance==TIM1) //check if the interrupt comes from TIM1
+	{
+    	__HAL_TIM_SET_COUNTER(htim, 0);
+    	uint16_t value = __HAL_TIM_GET_COMPARE(htim, TIM_CHANNEL_2);
+    	if (value > 2500){
+    		if (index != 8){
+    			motorValue = 0;
+    		} else {
+    			motorValue = values[2];
+    			motorValid = 1;
+    		}
+    		index = 0;
+    	} else {
+    		if (index < 8) {
+    		if (value < 500){
+    			value = 500;
+    		}
+    		rawvalues[index] = value;
+        	 values[index++] = (value - 500) * 2;
+    		} else {
+    			motorValue = 0;
+    		}
+    	}
+	}
+}
 /* USER CODE END 4 */
 
 /**

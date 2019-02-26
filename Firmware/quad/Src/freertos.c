@@ -53,8 +53,6 @@
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
-#include "mpu9250.h"
-#include "bmp280.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
@@ -134,26 +132,55 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
+
+extern volatile uint8_t motorValid;
+extern volatile uint16_t motorValue;
+
+TickType_t lastMotorValid = 0;
+
 void StartDefaultTask(void const * argument)
 {
 
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
-  uint16_t counter = 800;
-  mpu9250_initialize();
-  volatile uint8_t status2 = bmp280_init();
+  //uint16_t counter = 800;
+  /*mpu9250_initialize();
+  volatile uint8_t status2 = bmp280_init();*/
+	htim2.Instance->CCR1 = 1000;
+	htim3.Instance->CCR2 = 1000;
+	htim3.Instance->CCR4 = 1000;
+	htim4.Instance->CCR4 = 1000;
+
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
   for(;;)
   {
     /* Infinite loop */
-    htim2.Instance->CCR1 = counter;
-    htim3.Instance->CCR2 = counter;
-    htim3.Instance->CCR4 = counter;
-    htim4.Instance->CCR4 = counter;
-    if(counter == 999){
+	if (motorValid){
+		motorValid = 0;
+		lastMotorValid = xTaskGetTickCount();
+	}
+
+	TickType_t currentTick = xTaskGetTickCount();
+	if (currentTick > 100 && currentTick - lastMotorValid < pdMS_TO_TICKS(100)){
+		int16_t value = 1000 - motorValue;
+		if (value < 0){
+			value = 0;
+		}
+	    htim2.Instance->CCR1 = value;
+	    htim3.Instance->CCR2 = value;
+	    htim3.Instance->CCR4 = value;
+	    htim4.Instance->CCR4 = value;
+	} else {
+	    htim2.Instance->CCR1 = 1000;
+	    htim3.Instance->CCR2 = 1000;
+	    htim3.Instance->CCR4 = 1000;
+	    htim4.Instance->CCR4 = 1000;
+	}
+    vTaskDelay(pdMS_TO_TICKS(20));
+    /*if(counter == 999){
       counter = 0;
     } else {
       counter++;
@@ -164,7 +191,7 @@ void StartDefaultTask(void const * argument)
     volatile float temp = bmp280_getTemperature();
     volatile float pressure = bmp280_getPressure();
     volatile float height = bmp280_calcAltitude(pressure);
-    osDelay(10);
+    osDelay(10);*/
   }
   /* USER CODE END StartDefaultTask */
 }
