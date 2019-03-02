@@ -57,6 +57,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
 #include "tim.h"
+#include "stdio.h"
+//#include "usart.h"
+#include "mpu9250.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -126,18 +129,16 @@ void MX_FREERTOS_Init(void) {
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
+
+uint32_t lastMotorValid;
+extern uint16_t motorValue;
+extern uint8_t motorValid;
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used 
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-
-extern volatile uint8_t motorValid;
-extern volatile uint16_t motorValue;
-
-TickType_t lastMotorValid = 0;
-
 void StartDefaultTask(void const * argument)
 {
 
@@ -155,6 +156,13 @@ void StartDefaultTask(void const * argument)
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+	mpu9250_initialize();
+	//bmp280_init();
+
+	int16_t ax, ay, az, rotx, roty, rotz, mgx, mgy, mgz;
+	uint8_t buffer[256];
+	uint8_t msgLength;
   for(;;)
   {
     /* Infinite loop */
@@ -179,7 +187,10 @@ void StartDefaultTask(void const * argument)
 	    htim3.Instance->CCR4 = 1000;
 	    htim4.Instance->CCR4 = 1000;
 	}
-    vTaskDelay(pdMS_TO_TICKS(20));
+    mpu9250_getMotion9(&ax, &ay, &az, &rotx, &roty, &rotz, &mgx, &mgy, &mgz);
+    msgLength = snprintf(buffer, 256, "%d %d %d %d %d %d %d %d\r\n", ax, ay, az, rotx, roty, rotz, mgx, mgy, mgz);
+    //HAL_UART_Transmit(&huart1, buffer, msgLength, HAL_MAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(10));
     /*if(counter == 999){
       counter = 0;
     } else {
