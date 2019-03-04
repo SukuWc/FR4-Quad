@@ -204,6 +204,14 @@ void mpu9250_setFullScaleGyroRange(uint8_t range) {
     i2c_writeBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_GYRO_CONFIG, MPU9250_GCONFIG_FS_SEL_BIT, MPU9250_GCONFIG_FS_SEL_LENGTH, range);
 }
 
+void mpu9250_setFChoice_b(uint8_t b) {
+    i2c_writeBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_GYRO_CONFIG, 1, 2, b);
+}
+
+void mpu9250_setAccelDPFL(uint8_t mode) {
+    i2c_writeBits(I2C_HANDLE, I2C_ADDR, 0x1d, 2, 3, mode);
+}
+
 // ACCEL_CONFIG register
 
 /** Get self-test enabled setting for accelerometer X axis.

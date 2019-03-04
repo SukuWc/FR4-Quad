@@ -55,6 +55,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "usb.h"
 #include "gpio.h"
 
@@ -133,6 +134,7 @@ int main(void)
   MX_ADC2_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_2);
   //HAL_UART_Init(&huart1);
@@ -175,7 +177,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL3;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -206,8 +208,8 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 static volatile uint8_t index;
-static volatile uint16_t values[8];
-static volatile uint16_t rawvalues[8];
+volatile uint16_t values[8];
+volatile uint16_t rawValues[8];
 volatile uint16_t motorValue;
 volatile uint8_t motorValid;
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
@@ -216,7 +218,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 	{
     	__HAL_TIM_SET_COUNTER(htim, 0);
     	uint16_t value = __HAL_TIM_GET_COMPARE(htim, TIM_CHANNEL_2);
-    	if (value > 2500){
+    	if (value > 5000){
     		if (index != 8){
     			motorValue = 0;
     		} else {
@@ -226,11 +228,11 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     		index = 0;
     	} else {
     		if (index < 8) {
-    		if (value < 500){
-    			value = 500;
+    		if (value < 1000){
+    			value = 1000;
     		}
-    		rawvalues[index] = value;
-        	 values[index++] = (value - 500) * 2;
+    		rawValues[index] = value;
+        	 values[index++] = (value - 1000);
     		} else {
     			motorValue = 0;
     		}

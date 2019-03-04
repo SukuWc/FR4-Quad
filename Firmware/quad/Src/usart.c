@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : I2C.c
+  * File Name          : USART.c
   * Description        : This file provides code for the configuration
-  *                      of the I2C instances.
+  *                      of the USART instances.
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -48,82 +48,89 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "i2c.h"
+#include "usart.h"
 
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
-I2C_HandleTypeDef hi2c2;
+UART_HandleTypeDef huart1;
 
-/* I2C2 init function */
-void MX_I2C2_Init(void)
+/* USART1 init function */
+
+void MX_USART1_UART_Init(void)
 {
 
-  hi2c2.Instance = I2C2;
-  hi2c2.Init.ClockSpeed = 400000;
-  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c2.Init.OwnAddress1 = 0;
-  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c2.Init.OwnAddress2 = 0;
-  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
 
 }
 
-void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
+void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(i2cHandle->Instance==I2C2)
+  if(uartHandle->Instance==USART1)
   {
-  /* USER CODE BEGIN I2C2_MspInit 0 */
+  /* USER CODE BEGIN USART1_MspInit 0 */
 
-  /* USER CODE END I2C2_MspInit 0 */
+  /* USER CODE END USART1_MspInit 0 */
+    /* USART1 clock enable */
+    __HAL_RCC_USART1_CLK_ENABLE();
   
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**I2C2 GPIO Configuration    
-    PB10     ------> I2C2_SCL
-    PB11     ------> I2C2_SDA 
+    /**USART1 GPIO Configuration    
+    PB6     ------> USART1_TX
+    PB7     ------> USART1_RX 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStruct.Pin = GPIO_PIN_6;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /* I2C2 clock enable */
-    __HAL_RCC_I2C2_CLK_ENABLE();
-  /* USER CODE BEGIN I2C2_MspInit 1 */
+    GPIO_InitStruct.Pin = GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* USER CODE END I2C2_MspInit 1 */
+    __HAL_AFIO_REMAP_USART1_ENABLE();
+
+  /* USER CODE BEGIN USART1_MspInit 1 */
+
+  /* USER CODE END USART1_MspInit 1 */
   }
 }
 
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
+void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 {
 
-  if(i2cHandle->Instance==I2C2)
+  if(uartHandle->Instance==USART1)
   {
-  /* USER CODE BEGIN I2C2_MspDeInit 0 */
+  /* USER CODE BEGIN USART1_MspDeInit 0 */
 
-  /* USER CODE END I2C2_MspDeInit 0 */
+  /* USER CODE END USART1_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_I2C2_CLK_DISABLE();
+    __HAL_RCC_USART1_CLK_DISABLE();
   
-    /**I2C2 GPIO Configuration    
-    PB10     ------> I2C2_SCL
-    PB11     ------> I2C2_SDA 
+    /**USART1 GPIO Configuration    
+    PB6     ------> USART1_TX
+    PB7     ------> USART1_RX 
     */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10|GPIO_PIN_11);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6|GPIO_PIN_7);
 
-  /* USER CODE BEGIN I2C2_MspDeInit 1 */
+  /* USER CODE BEGIN USART1_MspDeInit 1 */
 
-  /* USER CODE END I2C2_MspDeInit 1 */
+  /* USER CODE END USART1_MspDeInit 1 */
   }
 } 
 
