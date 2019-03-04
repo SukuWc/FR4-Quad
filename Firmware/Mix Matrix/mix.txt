@@ -1,0 +1,65 @@
+
+
+
+user_ro = ppm_ch_1; // User: Roll Input        uint8_t (-128, +127)
+user_pi = ppm_ch_2; // User: Pitch Input       uint8_t (-128, +127)
+user_th = ppm_ch_3; // User: Throttle Input    int8_t  (0, 255)
+user_ya = ppm_ch_4; // User: Yaw Input         uint8_t (-128, +127)
+
+
+
+/* TOP VIEW OF THE QUADCOPTER
+
+
+              < +Roll +Yaw
+
+              Y
+
+              ^
+        >     |     <  
+      ((4))   |   ((2))
+        <     |     >
+              |
+              |
+              ----------> X    ^ +Pitch   
+ 
+        <           >
+      ((3))       ((1))
+        >           <
+
+
+*/
+
+
+// gyro range: +- 500 °/s
+// acce range: +- 20 m/s^2
+
+
+#define PWM_MAX 2^16-1
+
+
+
+int_32_t ro = 0; // signed int, 0 is center, positive rolls left
+int_32_t pi = 0; // signed int, 0 is center, positive pitches forward 
+int_32_t th = 0; // unsigned, 0 is minimum
+int_32_t ya = 0; // signed int, 0 is center, positive turns left
+
+
+ro = 0.50 * user_ro + 0.01 * gyro_ro + 0.01*accel_x;
+pi = 0.50 * user_pi + 0.01 * gyro_pi + 0.01*accel_y;
+ya = 0.50 * user_ya + 0.01 * gyro_ya;
+
+th = 0.8*user_th  + 0.1*accel_z;
+
+
+pwm_4 = th - ro - pi + ya  ;
+pwm_3 = th - ro + pi - ya  ;
+
+pwm_1 = th + ro + pi + ya  ;
+pwm_2 = th + ro - pi - ya  ;
+
+
+pwm_1 = (pwm_1>PWM_MAX)? PWM_MAX: pwm_1;
+pwm_2 = (pwm_2>PWM_MAX)? PWM_MAX: pwm_2;
+pwm_3 = (pwm_3>PWM_MAX)? PWM_MAX: pwm_3;
+pwm_4 = (pwm_4>PWM_MAX)? PWM_MAX: pwm_4;
