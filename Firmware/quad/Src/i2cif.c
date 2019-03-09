@@ -113,8 +113,8 @@ int8_t i2c_readWord(I2C_HandleTypeDef *i2c,uint8_t devAddr, uint8_t regAddr, uin
  */
 int8_t i2c_readBytes(I2C_HandleTypeDef *i2c,uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
 
-  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(i2c, devAddr << 1, &regAddr, 1, HAL_MAX_DELAY);
-  if (status == HAL_OK) status = HAL_I2C_Master_Receive(i2c, devAddr << 1, data, length, HAL_MAX_DELAY);
+  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(i2c, devAddr << 1, &regAddr, 1, 10);
+  if (status == HAL_OK) status = HAL_I2C_Master_Receive(i2c, devAddr << 1, data, length, 10);
   if (status == HAL_OK)
     return length;
   else
@@ -257,7 +257,7 @@ uint8_t i2c_writeBytes(I2C_HandleTypeDef *i2c,uint8_t devAddr, uint8_t regAddr, 
   for (uint8_t i = 0; i < length; i++){
     buffer[i + 1] = data[i];
   }
-  if (HAL_I2C_Master_Transmit(i2c, devAddr << 1, buffer, length + 1, HAL_MAX_DELAY) == HAL_OK){
+  if (HAL_I2C_Master_Transmit(i2c, devAddr << 1, buffer, length + 1, 10) == HAL_OK){
     return 1;
   } else {
     return 0;

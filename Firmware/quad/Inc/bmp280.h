@@ -9,8 +9,7 @@
 #define BMP280_H_
 
 #include "main.h"
-#include "i2c.h"
-
+extern I2C_HandleTypeDef hi2c2;
 #define I2C_HANDLE &hi2c2
 
 #define BMP280_ADDRESS   0x77

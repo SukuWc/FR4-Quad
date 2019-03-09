@@ -13,8 +13,8 @@ static uint8_t buffer[16];
  */
 void mpu9250_initialize() {
   mpu9250_setClockSource(MPU9250_CLOCK_PLL_XGYRO);
-  mpu9250_setFullScaleGyroRange(MPU9250_GYRO_FS_250);
-  mpu9250_setFullScaleAccelRange(MPU9250_ACCEL_FS_2);
+  mpu9250_setFullScaleGyroRange(MPU9250_GYRO_FS_2000);
+  mpu9250_setFullScaleAccelRange(MPU9250_ACCEL_FS_16);
   mpu9250_setSleepEnabled(0); // thanks to Jack Elston for pointing this one out!
 }
 
@@ -189,6 +189,7 @@ void mpu9250_setDLPFMode(uint8_t mode) {
  * @see MPU9250_GCONFIG_FS_SEL_LENGTH
  */
 uint8_t mpu9250_getFullScaleGyroRange() {
+	buffer[0] = 255;
     i2c_readBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_GYRO_CONFIG, MPU9250_GCONFIG_FS_SEL_BIT, MPU9250_GCONFIG_FS_SEL_LENGTH, buffer);
     return buffer[0];
 }
@@ -204,13 +205,37 @@ void mpu9250_setFullScaleGyroRange(uint8_t range) {
     i2c_writeBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_GYRO_CONFIG, MPU9250_GCONFIG_FS_SEL_BIT, MPU9250_GCONFIG_FS_SEL_LENGTH, range);
 }
 
+uint8_t mpu9250_getFChoice_b() {
+	buffer[0] = 255;
+    i2c_readBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_GYRO_CONFIG, 1, 2, buffer);
+    return buffer[0];
+}
+
 void mpu9250_setFChoice_b(uint8_t b) {
     i2c_writeBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_GYRO_CONFIG, 1, 2, b);
 }
 
+uint8_t mpu9250_getAccelF_b() {
+	buffer[0] = 255;
+    i2c_readBits(I2C_HANDLE, I2C_ADDR, 0x1d, 3, 1, buffer);
+    return buffer[0];
+}
+
+void mpu9250_setAccelF_b(uint8_t b) {
+    i2c_writeBits(I2C_HANDLE, I2C_ADDR, 0x1d, 3, 1, b);
+}
+
+
 void mpu9250_setAccelDPFL(uint8_t mode) {
     i2c_writeBits(I2C_HANDLE, I2C_ADDR, 0x1d, 2, 3, mode);
 }
+
+uint8_t mpu9250_getAccelDPFL() {
+	buffer[0] = 255;
+    i2c_readBits(I2C_HANDLE, I2C_ADDR, 0x1d, 2, 3, buffer);
+    return buffer[0];
+}
+
 
 // ACCEL_CONFIG register
 
@@ -277,6 +302,7 @@ void mpu9250_setAccelZSelfTest(uint8_t enabled) {
  * @see MPU9250_ACONFIG_AFS_SEL_LENGTH
  */
 uint8_t mpu9250_getFullScaleAccelRange() {
+	buffer[0] = 255;
     i2c_readBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_ACCEL_CONFIG, MPU9250_ACONFIG_AFS_SEL_BIT, MPU9250_ACONFIG_AFS_SEL_LENGTH, buffer);
     return buffer[0];
 }
@@ -2341,6 +2367,7 @@ void mpu9250_reset() {
  * @see MPU9250_PWR1_SLEEP_BIT
  */
 uint8_t mpu9250_getSleepEnabled() {
+	buffer[0] = 255;
     i2c_readBit(I2C_HANDLE, I2C_ADDR, MPU9250_RA_PWR_MGMT_1, MPU9250_PWR1_SLEEP_BIT, buffer);
     return buffer[0];
 }
@@ -2410,6 +2437,7 @@ void mpu9250_setTempSensorEnabled(uint8_t enabled) {
  * @see MPU9250_PWR1_CLKSEL_LENGTH
  */
 uint8_t mpu9250_getClockSource() {
+	buffer[0] = 255;
     i2c_readBits(I2C_HANDLE, I2C_ADDR, MPU9250_RA_PWR_MGMT_1, MPU9250_PWR1_CLKSEL_BIT, MPU9250_PWR1_CLKSEL_LENGTH, buffer);
     return buffer[0];
 }

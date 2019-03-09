@@ -110,32 +110,28 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_Delay(10);
 
+  nRF24_Init();
   uint8_t ADDR[] = { 'n', 'R', 'F', '2', '4' }; // the address for RX pipe
+  nRF24_DisableAA(0xFF); // disable ShockBurst
+  nRF24_SetRFChannel(115); // set RF channel to 2490MHz
+  nRF24_SetDataRate(nRF24_DR_250kbps); // 2Mbit/s data rate
+  nRF24_SetCRCScheme(nRF24_CRC_off); // 1-byte CRC scheme
+  nRF24_SetAddrWidth(5); // address width is 5 bytes
   if (receiver){
-    nRF24_DisableAA(0xFF); // disable ShockBurst
-    nRF24_SetRFChannel(115); // set RF channel to 2490MHz
-    nRF24_SetDataRate(nRF24_DR_250kbps); // 2Mbit/s data rate
-    nRF24_SetCRCScheme(nRF24_CRC_off); // 1-byte CRC scheme
-    nRF24_SetAddrWidth(5); // address width is 5 bytes
     nRF24_SetAddr(nRF24_PIPE1, ADDR); // program pipe address
-    nRF24_SetRXPipe(nRF24_PIPE1, nRF24_AA_OFF, 13); // enable RX pipe#1 with Auto-ACK: disabled, payload length: 10 bytes
+    nRF24_SetRXPipe(nRF24_PIPE1, nRF24_AA_OFF, 14); // enable RX pipe#1 with Auto-ACK: disabled, payload length: 10 bytes
     nRF24_SetOperationalMode(nRF24_MODE_RX); // switch transceiver to the RX mode
-    nRF24_SetPowerMode(nRF24_PWR_UP); // wake-up transceiver (in case if it sleeping)
     // then pull CE pin to HIGH, and the nRF24 will start a receive...
   } else {
-    nRF24_DisableAA(0xFF); // disable ShockBurst
-    nRF24_SetRFChannel(115); // set RF channel to 2490MHz
-    nRF24_SetDataRate(nRF24_DR_250kbps); // 2Mbit/s data rate
-    nRF24_SetCRCScheme(nRF24_CRC_off); // 1-byte CRC scheme
-    nRF24_SetAddrWidth(5); // address width is 5 bytes
-    nRF24_SetTXPower(nRF24_TXPWR_0dBm); // configure TX power
+    nRF24_SetTXPower(nRF24_TXPWR_18dBm); // configure TX power
     nRF24_SetAddr(nRF24_PIPETX, ADDR); // program TX address
     nRF24_SetOperationalMode(nRF24_MODE_TX); // switch transceiver to the TX mode
     nRF24_ClearIRQFlags(); // clear any pending IRQ bits
-    nRF24_SetPowerMode(nRF24_PWR_UP); // wake-up transceiver (in case if it sleeping)
     // the nRF24 is ready for transmission, upload a payload, then pull CE pin to HIGH and it will transmit a packet...
   }
+  nRF24_SetPowerMode(nRF24_PWR_UP); // wake-up transceiver (in case if it sleeping)
 
   volatile uint8_t nrf24_status = nRF24_Check();
   /* USER CODE END 2 */
@@ -149,7 +145,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
     if (receiver){
-      uint8_t nRF24_payload[32]; // buffer for payload
+      uint8_t nRF24_payload[32] = {0}; // buffer for payload
       uint8_t payload_length; // variable to store a length of received payload
       uint8_t pipe; // pipe number
       nRF24_CE_H(); // start receiving
@@ -167,10 +163,10 @@ int main(void)
           }
       }
     } else {
-      uint8_t payload[] = "Hello World!\n";
-      payload[0] = cnt++;
+      uint8_t payload[] = "Hello World! \n";
+      payload[12] = cnt++;
       nRF24_CE_L();
-      nRF24_WritePayload(payload, 13); // transfer payload data to transceiver
+      nRF24_WritePayload(payload, 14); // transfer payload data to transceiver
       nRF24_CE_H(); // assert CE pin (transmission starts)
       while (1) {
           status = nRF24_GetStatus();
@@ -181,6 +177,7 @@ int main(void)
       }
       nRF24_CE_L(); // de-assert CE pin (nRF24 goes to StandBy-I mode)
       nRF24_ClearIRQFlags(); // clear any pending IRQ flags
+      nRF24_FlushTX();
       if (status & nRF24_FLAG_MAX_RT) {
           // Auto retransmit counter exceeds the programmed maximum limit (payload in FIFO is not removed)
           // Also the software can flush the TX FIFO here...

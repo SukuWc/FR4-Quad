@@ -2,17 +2,19 @@
 #define __mpu9250_H
 
 #include "main.h"
-#include "i2c.h"
 
+extern I2C_HandleTypeDef hi2c2;
 #define I2C_HANDLE &hi2c2
 #define I2C_ADDR 0x68
 #define delay(x) HAL_Delay(x)
 
+uint8_t mpu9250_getAccelDPFL();
 void mpu9250_getAcceleration(int16_t* x, int16_t* y, int16_t* z);
 int16_t mpu9250_getAccelerationX();
 int16_t mpu9250_getAccelerationY();
 int16_t mpu9250_getAccelerationZ();
 uint8_t mpu9250_getAccelerometerPowerOnDelay();
+uint8_t mpu9250_getAccelF_b();
 uint8_t mpu9250_getAccelFIFOEnabled();
 uint8_t mpu9250_getAccelXSelfTest();
 uint8_t mpu9250_getAccelYSelfTest();
@@ -37,6 +39,7 @@ uint8_t mpu9250_getExternalSensorByte(int position);
 uint32_t mpu9250_getExternalSensorDWord(int position);
 uint16_t mpu9250_getExternalSensorWord(int position);
 uint8_t mpu9250_getExternalShadowDelayEnabled();
+uint8_t mpu9250_getFChoice_b();
 void mpu9250_getFIFOBytes(uint8_t *data, uint8_t length);
 uint8_t mpu9250_getFIFOByte();
 uint16_t mpu9250_getFIFOCount();
@@ -161,7 +164,9 @@ void mpu9250_resetI2CMaster();
 void mpu9250_resetSensors();
 void mpu9250_resetTemperaturePath();
 void mpu9250_reset();
+void mpu9250_setAccelDPFL(uint8_t mode);
 void mpu9250_setAccelerometerPowerOnDelay(uint8_t delay);
+void mpu9250_setAccelF_b(uint8_t b);
 void mpu9250_setAccelFIFOEnabled(uint8_t enabled);
 void mpu9250_setAccelXSelfTest(uint8_t enabled);
 void mpu9250_setAccelYSelfTest(uint8_t enabled);
@@ -177,6 +182,7 @@ void mpu9250_setDMPConfig2(uint8_t config);
 void mpu9250_setDMPEnabled(uint8_t enabled);
 void mpu9250_setExternalFrameSync(uint8_t sync);
 void mpu9250_setExternalShadowDelayEnabled(uint8_t enabled);
+void mpu9250_setFChoice_b(uint8_t b);
 void mpu9250_setFIFOByte(uint8_t data);
 void mpu9250_setFIFOEnabled(uint8_t enabled);
 void mpu9250_setFreefallDetectionCounterDecrement(uint8_t decrement);
