@@ -31,7 +31,7 @@ int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 
-#define AVG_LENGTH 1024
+/*#define AVG_LENGTH 1024
 int16_t gyroRollAvg[AVG_LENGTH], gyroPitchAvg[AVG_LENGTH];
 uint16_t gyroRollAvgIndex = 0, gyroPitchAvgIndex = 0;
 int32_t gyroRollSum = 0, gyroPitchSum = 0;
@@ -46,7 +46,7 @@ int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inVal
 		(*index)++;
 	}
 	return inValue - (*sum / AVG_LENGTH);
-}
+}*/
 
 void core_updateController(){
 	//sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
@@ -65,14 +65,14 @@ void core_updateController(){
 	accel_y = ay;
 	accel_z = az;
 
-	gyro_pi = -getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
-	gyro_ro = getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
+	gyro_pi = -roty/*getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty)*/;
+	gyro_ro = rotx/*getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx)*/;
 	gyro_ya = rotz;
 
 
 #define GYRO_SENS 16.384
 #define M_PI 3.14159265359
-#define ALPHA 0.99
+#define ALPHA 0.992
 #define dt 0.002
 	pitchGyro = (float)(gyro_pi) / GYRO_SENS * dt;
 	pitch += pitchGyro;
@@ -84,20 +84,15 @@ void core_updateController(){
 	if (forceMagnitudeApprox > 1024 && forceMagnitudeApprox < 4096){
 		if (abs(accel_x) < abs(accel_z)){
 			pitchAcc = -atan2f((float)accel_x, (float)accel_z) * 180 / M_PI;
-			if (abs(pitchAcc) < 45){
-				//pitch = pitch * ALPHA; /*+ pitchAcc * (1 - ALPHA);*/
-			}
+			pitch = pitch * ALPHA + pitchAcc * (1 - ALPHA);
 		}
 
 		if (abs(accel_y < abs(accel_z))){
 			rollAcc = -atan2f((float)accel_y, (float)accel_z) * 180 / M_PI;
-			if (abs(rollAcc) < 45){
-				//roll = roll * ALPHA; /*+ rollAcc * (1 - ALPHA);*/
-			}
+			roll = roll * ALPHA + rollAcc * (1 - ALPHA);
 		}
 	}
 
-	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
 
 	int16_t userInputMin = 1000;
 	int16_t userInputMax = 2000;
@@ -146,6 +141,7 @@ void core_updateController(){
 		pwm_4 = 0;
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
+	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
 }
 
 void SystemCoreTask(void const * argument){
