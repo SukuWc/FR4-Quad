@@ -21,11 +21,32 @@ uint32_t lastMotorValid = 0;
 volatile float pitch = 0;
 volatile float roll = 0;
 volatile float yawn = 0;
+volatile float pitchGyro = 0;
+volatile float rollGyro = 0;
+volatile float pitchAcc = 0;
+volatile float rollAcc = 0;
 
 int16_t accel_x, accel_y, accel_z, gyro_ro, gyro_pi, gyro_ya;
 int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
+
+/*#define AVG_LENGTH 1024
+int16_t gyroRollAvg[AVG_LENGTH], gyroPitchAvg[AVG_LENGTH];
+uint16_t gyroRollAvgIndex = 0, gyroPitchAvgIndex = 0;
+int32_t gyroRollSum = 0, gyroPitchSum = 0;
+
+int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
+	*sum -= buffer[*index];
+	*sum += inValue;
+	buffer[*index] = inValue;
+	if (*index + 1 >= AVG_LENGTH){
+		*index = 0;
+	} else {
+		(*index)++;
+	}
+	return inValue - (*sum / AVG_LENGTH);
+}*/
 
 void core_updateController(){
 	//sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
@@ -44,29 +65,34 @@ void core_updateController(){
 	accel_y = ay;
 	accel_z = az;
 
-	gyro_pi = -roty;
-	gyro_ro = rotx;
+	gyro_pi = -roty/*getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty)*/;
+	gyro_ro = rotx/*getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx)*/;
 	gyro_ya = rotz;
 
 
 #define GYRO_SENS 16.384
 #define M_PI 3.14159265359
-#define ALPHA 0.998
+#define ALPHA 0.992
 #define dt 0.002
-	pitch += (float)(gyro_pi) / GYRO_SENS * dt;
-	roll +=  gyro_ro/ GYRO_SENS * dt;
+	pitchGyro = (float)(gyro_pi) / GYRO_SENS * dt;
+	pitch += pitchGyro;
+	rollGyro = -(gyro_ro/ GYRO_SENS * dt);
+	roll += rollGyro;
 	yawn += gyro_ya / GYRO_SENS * dt;
 
 	int forceMagnitudeApprox = abs(accel_x) + abs(accel_y) + abs(accel_z);
 	if (forceMagnitudeApprox > 1024 && forceMagnitudeApprox < 4096){
-		float pitchAcc = atan2f((float)accel_x, (float)accel_z) * 180 / M_PI;
-		pitch = pitch * ALPHA + pitchAcc * (1 - ALPHA);
+		if (abs(accel_x) < abs(accel_z)){
+			pitchAcc = -atan2f((float)accel_x, (float)accel_z) * 180 / M_PI;
+			pitch = pitch * ALPHA + pitchAcc * (1 - ALPHA);
+		}
 
-		float rollAcc = atan2f((float)accel_y, (float)accel_z) * 180 / M_PI;
-		roll = roll * ALPHA + rollAcc * (1 - ALPHA);
+		if (abs(accel_y < abs(accel_z))){
+			rollAcc = -atan2f((float)accel_y, (float)accel_z) * 180 / M_PI;
+			roll = roll * ALPHA + rollAcc * (1 - ALPHA);
+		}
 	}
 
-	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
 
 	int16_t userInputMin = 1000;
 	int16_t userInputMax = 2000;
@@ -84,7 +110,7 @@ void core_updateController(){
 	if (user_ya < userOutputMin) user_ya = userOutputMin; else if (user_ya > userOutputMax) user_ya = userOutputMax;
 
 
-#define ANGLE_GAIN 7.01
+#define ANGLE_GAIN 13.01
 #define GYRO_GAIN 0
 
 	int32_t ro = 0; // signed int, 0 is center, positive rolls left
@@ -92,12 +118,12 @@ void core_updateController(){
 	int32_t th = 0; // unsigned, 0 is minimum
 	int32_t ya = 0; // signed int, 0 is center, positive turns left
 
-	int16_t mulResX = -ANGLE_GAIN * roll;
-	int16_t mulResY = ANGLE_GAIN * pitch;
+	int16_t mulResX = ANGLE_GAIN * roll;
+	int16_t mulResY = -ANGLE_GAIN * pitch;
 	int16_t gyroYawn = GYRO_GAIN * gyro_ya;
-	ro = 9 * user_ro + /*GYRO_GAIN * gyro_ro*/ + mulResX;
-	pi = 9 * user_pi + /*GYRO_GAIN * gyro_pi*/ + mulResY;
-	ya = 9 * user_ya + gyroYawn;
+	ro = 0 * user_ro /*+ GYRO_GAIN * gyro_ro */+ mulResX;
+	pi = 0 * user_pi /*+ GYRO_GAIN * gyro_pi */+ mulResY;
+	ya = 0;//9 * user_ya /*+ gyroYawn*/;
 
 	//pi = 0; ya = 0;
 	th = user_th * 4;
@@ -115,6 +141,7 @@ void core_updateController(){
 		pwm_4 = 0;
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
+	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
 }
 
 void SystemCoreTask(void const * argument){
