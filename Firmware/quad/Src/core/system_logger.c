@@ -29,11 +29,12 @@ void logger_sendAccelerometerMessage(){
 	//uint8_t msgLength = snprintf(buffer, 256, "PITCH: %8.4f ROLL: %8.4f ACC_PITCH: %8.4f ACC_ROLL: %8.4f GYRO_PITCH: %8.4f GYRO_ROLL: %8.4f ACCX: %+5d ACCY: %+5d ACCZ: %+5d \r\n", pitch, roll, pitchAcc, rollAcc, pitchGyro, rollGyro, ax, ay, az);
 	//uint8_t msgLength = snprintf(buffer, 256, "%5.5d %5.5d %5.5d %5.5d %5.5d %5.5d %5.5d %5.5d  %4.4d %4.4d %4.4d %4.4d  %4.4d %4.4d %4.4d %4.4d\r\n", ppm_values[0], ppm_values[1], ppm_values[2], ppm_values[3], ppm_values[4], ppm_values[5], ppm_values[6], ppm_values[7], pwm_1, pwm_2, pwm_3, pwm_4, htim3.Instance->CCR4, htim3.Instance->CCR2, htim2.Instance->CCR1, htim4.Instance->CCR4 );
 	uint8_t msgLength = snprintf(buffer, 256,
-			"%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%d,%d,%d,%d\r\n",
+			"%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d\r\n",
 			ax, ay, az,
 			rotx, roty, rotz,
 			pitchAcc, rollAcc,
 			pitchGyro, rollGyro,
+			pitch, roll,
 			pwm_1, pwm_2, pwm_3, pwm_4);
 	sendMessage(buffer, msgLength);
 }
