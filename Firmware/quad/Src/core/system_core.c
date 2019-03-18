@@ -28,10 +28,10 @@ int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 
-#define AVG_LENGTH 1
+/*#define AVG_LENGTH 1
 int16_t avg[3][AVG_LENGTH] = {0};
 uint16_t avgIndex[3] = {0};
-int32_t avgSum[3] = {0};
+int32_t avgSum[3] = {0};*/
 
 volatile uint8_t inProcess = 0;
 volatile uint8_t errorState = 0;
@@ -57,6 +57,11 @@ int32_t pi = 0; // signed int, 0 is center, positive pitches forward
 int32_t th = 0; // unsigned, 0 is minimum
 int32_t ya = 0; // signed int, 0 is center, positive turns left
 
+#define GYRO_OFFSET_AVG_LENGTH 1024
+int32_t gyroOffsetSum[3] = {0};
+uint16_t gyroOffsetIndex = 0;
+int16_t gyroOffsets[3] = {0};
+
 void ControlLoop(const void* argument){
 	if (inProcess){
 		errorState = 1;
@@ -64,7 +69,7 @@ void ControlLoop(const void* argument){
 	sNotifySystemCore(EVENT_CONTROLLER_UPDATE);
 }
 
-int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
+/*int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
 	*sum -= buffer[*index];
 	*sum += inValue;
 	buffer[*index] = inValue;
@@ -74,9 +79,9 @@ int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inVal
 		(*index)++;
 	}
 	return (*sum / AVG_LENGTH);
-}
+}*/
 
-#define USER_ANGLE_MAX 60.0
+#define USER_ANGLE_MAX 30.0
 #define USER_INPUT_MAX 256.0;
 #define POLY_EXP 2
 float getTargetAngleFromUserInput(int16_t user){
@@ -91,7 +96,7 @@ float getTargetAngleFromUserInput(int16_t user){
 	return result * USER_ANGLE_MAX;
 }
 
-#define USER_YAW_MAX 360.0
+#define USER_YAW_MAX 180.0
 float getTargetYawSpeedFromUserInput(int16_t user){
 	float input = user / USER_INPUT_MAX;
 	return input * USER_YAW_MAX;
@@ -113,13 +118,13 @@ void core_updateController(){
 	//MX_RESET_I2C();
 	mpu9250_getMotion6(&ax, &ay, &az, &rotx, &roty, &rotz);
 
-	accel_x = -getAverage(avg[0], &avgIndex[0], &avgSum[0], ax);
-	accel_y = -getAverage(avg[1], &avgIndex[1], &avgSum[1], ay);
-	accel_z = getAverage(avg[2], &avgIndex[2], &avgSum[2], az);
+	accel_x = -ax;//getAverage(avg[0], &avgIndex[0], &avgSum[0], ax);
+	accel_y = -ay;//getAverage(avg[1], &avgIndex[1], &avgSum[1], ay);
+	accel_z = az;//getAverage(avg[2], &avgIndex[2], &avgSum[2], az);
 
-	gyro_pi = roty/*getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty)*/;
-	gyro_ro = -rotx/*getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx)*/;
-	gyro_ya = -rotz;
+	gyro_pi = (roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
+	gyro_ro = -(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
+	gyro_ya = -(rotz - gyroOffsets[2]);
 
 
 #define GYRO_SENS 16.384
@@ -149,14 +154,14 @@ void core_updateController(){
 	int16_t userInputMin = 1000;
 	int16_t userInputMax = 2000;
 	int16_t userInputAvg = (userInputMin + userInputMax) / 2;
-	int16_t inOutRatio = 4;
+	int16_t inOutRatio = 2;
 	int16_t userOutputMin = -256;
 	int16_t userOutputMax = 256;
 	int16_t userDeadband = 12;
 	if (motorValid){
 		user_th = (ppm_values[2] - userInputMin) / inOutRatio;
 		if (user_th < 0) user_th = 0; else if (user_th > userOutputMax*2) user_th = userOutputMax*2;
-		user_ro = -((ppm_values[0] - userInputAvg) / inOutRatio + 1);
+		user_ro = -((ppm_values[0] - userInputAvg) / inOutRatio);
 		if (user_ro < userOutputMin) user_ro = userOutputMin; else if (user_ro > userOutputMax) user_ro = userOutputMax;
 		if (user_ro <= userDeadband && user_ro >= -userDeadband) user_ro = 0;
 		user_pi = (ppm_values[1] - userInputAvg) / inOutRatio;
@@ -189,14 +194,27 @@ void core_updateController(){
 	ro = calculatePIDLoop(&rollPid, getTargetAngleFromUserInput(user_ro) + roll);
 	pi = calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
 	ya = calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
-	th = user_th * 4;
+	th = user_th * 2;
 	if (user_th < 5 || !motorValid || errorState || !thrustWasInZero){
 		pwm_1 = 0;
 		pwm_2 = 0;
 		pwm_3 = 0;
 		pwm_4 = 0;
-	} else {
 
+		if (abs(rotx) + abs(roty) + abs(rotz) < 200){
+			gyroOffsetSum[0] += rotx;
+			gyroOffsetSum[1] += roty;
+			gyroOffsetSum[2] += rotz;
+			gyroOffsetIndex++;
+			if (gyroOffsetIndex >= GYRO_OFFSET_AVG_LENGTH){
+				for (int i = 0; i < 3; i++){
+					gyroOffsets[i] = (int16_t)(gyroOffsetSum[i] / GYRO_OFFSET_AVG_LENGTH);
+					gyroOffsetSum[i] = 0;
+				}
+				gyroOffsetIndex = 0;
+			}
+		}
+	} else {
 		pwm_4 = th - ro - pi + ya;
 		pwm_3 = th - ro + pi - ya;
 		pwm_1 = th + ro + pi + ya;
