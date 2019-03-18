@@ -10,6 +10,7 @@
 #include "bsp/ppm_handler.h"
 #include "bsp/motors.h"
 #include "math.h"
+#include "core/pid.h"
 
 void ControlLoop(const void* argument){
 	sNotifySystemCore(EVENT_CONTROLLER_UPDATE);
@@ -31,10 +32,13 @@ int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 
-/*#define AVG_LENGTH 1024
-int16_t gyroRollAvg[AVG_LENGTH], gyroPitchAvg[AVG_LENGTH];
-uint16_t gyroRollAvgIndex = 0, gyroPitchAvgIndex = 0;
-int32_t gyroRollSum = 0, gyroPitchSum = 0;
+#define AVG_LENGTH 512
+int16_t avg[3][AVG_LENGTH] = {0};
+uint16_t avgIndex[3] = {0};
+int32_t avgSum[3] = {0};
+
+volatile uint8_t inProcess = 0;
+volatile uint8_t errorState = 0;
 
 int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
 	*sum -= buffer[*index];
@@ -45,8 +49,8 @@ int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inVal
 	} else {
 		(*index)++;
 	}
-	return inValue - (*sum / AVG_LENGTH);
-}*/
+	return (*sum / AVG_LENGTH);
+}
 
 void core_updateController(){
 	//sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
@@ -58,12 +62,14 @@ void core_updateController(){
 		lastMotorValid = xTaskGetTickCount();
 	}
 
+	inProcess = 1;
+
 	//MX_RESET_I2C();
 	mpu9250_getMotion6(&ax, &ay, &az, &rotx, &roty, &rotz);
 
-	accel_x = -ax;
-	accel_y = ay;
-	accel_z = az;
+	accel_x = -getAverage(avg[0], &avgIndex[0], &avgSum[0], ax);
+	accel_y = getAverage(avg[1], &avgIndex[1], &avgSum[1], ay);
+	accel_z = getAverage(avg[2], &avgIndex[2], &avgSum[2], az);
 
 	gyro_pi = -roty/*getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty)*/;
 	gyro_ro = rotx/*getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx)*/;
@@ -71,9 +77,9 @@ void core_updateController(){
 
 
 #define GYRO_SENS 16.384
-#define M_PI 3.14159265359
-#define ALPHA 0.992
+#define ALPHA 0.9985
 #define dt 0.002
+
 	pitchGyro = (float)(gyro_pi) / GYRO_SENS * dt;
 	pitch += pitchGyro;
 	rollGyro = -(gyro_ro/ GYRO_SENS * dt);
@@ -110,7 +116,7 @@ void core_updateController(){
 	if (user_ya < userOutputMin) user_ya = userOutputMin; else if (user_ya > userOutputMax) user_ya = userOutputMax;
 
 
-#define ANGLE_GAIN 13.01
+#define ANGLE_GAIN 4.1
 #define GYRO_GAIN 0
 
 	int32_t ro = 0; // signed int, 0 is center, positive rolls left
@@ -121,9 +127,9 @@ void core_updateController(){
 	int16_t mulResX = ANGLE_GAIN * roll;
 	int16_t mulResY = -ANGLE_GAIN * pitch;
 	int16_t gyroYawn = GYRO_GAIN * gyro_ya;
-	ro = 0 * user_ro /*+ GYRO_GAIN * gyro_ro */+ mulResX;
-	pi = 0 * user_pi /*+ GYRO_GAIN * gyro_pi */+ mulResY;
-	ya = 0;//9 * user_ya /*+ gyroYawn*/;
+	ro = 1 * user_ro /*+ GYRO_GAIN * gyro_ro */+ mulResX;
+	pi = 1 * user_pi /*+ GYRO_GAIN * gyro_pi */+ mulResY;
+	ya = 1 * user_ya /*+ gyroYawn*/;
 
 	//pi = 0; ya = 0;
 	th = user_th * 4;
@@ -134,7 +140,7 @@ void core_updateController(){
 	int32_t pwm_1 = th + ro + pi + ya  ;
 	int32_t pwm_2 = th + ro - pi - ya  ;
 
-	if (user_th < 5 || lastMotorValid == 0 || xTaskGetTickCount() - lastMotorValid >= pdMS_TO_TICKS(100)){
+	if (user_th < 5 || lastMotorValid == 0 || xTaskGetTickCount() - lastMotorValid >= pdMS_TO_TICKS(100) || errorState){
 		pwm_1 = 0;
 		pwm_2 = 0;
 		pwm_3 = 0;
@@ -142,6 +148,7 @@ void core_updateController(){
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
 	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
+	inProcess = 0;
 }
 
 void SystemCoreTask(void const * argument){
