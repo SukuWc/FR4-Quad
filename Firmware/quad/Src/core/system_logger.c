@@ -8,6 +8,7 @@
 #include "bsp/logger.h"
 #include "limits.h"
 #include "core/system_logger.h"
+#include "core/pid.h"
 
 extern osSemaphoreId loggerLockHandle;
 
@@ -18,6 +19,8 @@ extern volatile float pitchAcc, rollAcc;
 extern volatile float pitchGyro, rollGyro;
 extern uint16_t ppm_values[8];
 extern int32_t pwm_1, pwm_2, pwm_3, pwm_4;
+extern int16_t pi,ro;
+extern PIDStruct rollPid, pitchPid;
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
@@ -29,13 +32,15 @@ void logger_sendAccelerometerMessage(){
 	//uint8_t msgLength = snprintf(buffer, 256, "PITCH: %8.4f ROLL: %8.4f ACC_PITCH: %8.4f ACC_ROLL: %8.4f GYRO_PITCH: %8.4f GYRO_ROLL: %8.4f ACCX: %+5d ACCY: %+5d ACCZ: %+5d \r\n", pitch, roll, pitchAcc, rollAcc, pitchGyro, rollGyro, ax, ay, az);
 	//uint8_t msgLength = snprintf(buffer, 256, "%5.5d %5.5d %5.5d %5.5d %5.5d %5.5d %5.5d %5.5d  %4.4d %4.4d %4.4d %4.4d  %4.4d %4.4d %4.4d %4.4d\r\n", ppm_values[0], ppm_values[1], ppm_values[2], ppm_values[3], ppm_values[4], ppm_values[5], ppm_values[6], ppm_values[7], pwm_1, pwm_2, pwm_3, pwm_4, htim3.Instance->CCR4, htim3.Instance->CCR2, htim2.Instance->CCR1, htim4.Instance->CCR4 );
 	uint8_t msgLength = snprintf(buffer, 256,
-			"%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d\r\n",
+			"%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%f,%f\r\n",
 			ax, ay, az,
 			rotx, roty, rotz,
 			pitchAcc, rollAcc,
 			pitchGyro, rollGyro,
 			pitch, roll,
-			pwm_1, pwm_2, pwm_3, pwm_4);
+			pwm_1, pwm_2, pwm_3, pwm_4,
+			pi,ro,
+			pitchPid.integral_part, rollPid.integral_part);
 	sendMessage(buffer, msgLength);
 }
 
