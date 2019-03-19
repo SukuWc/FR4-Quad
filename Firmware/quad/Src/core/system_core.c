@@ -38,12 +38,14 @@ volatile uint8_t inProcess = 0;
 volatile uint8_t errorState = 0;
 uint8_t thrustWasInZero = 0;
 
-#define PID_CLAMP_MIN -320
-#define PID_CLAMP_MAX 320
+#define USER_INPUT_TO_THRUST 0.3f
 
-#define ANGLE_KP 4.1
+#define PID_CLAMP_MIN -64
+#define PID_CLAMP_MAX 64
+
+#define ANGLE_KP 2.5
 #define ANGLE_KD 320
-#define ANGLE_KI 0.000
+#define ANGLE_KI 0.0
 
 #define YAWSPEED_KP 5.0
 #define YAWSPEED_KD 30.0
@@ -82,9 +84,9 @@ void ControlLoop(const void* argument){
 	return (*sum / AVG_LENGTH);
 }*/
 
-#define USER_ANGLE_MAX 30.0
+#define USER_ANGLE_MAX 45.0
 #define USER_INPUT_MAX 256.0;
-#define POLY_EXP 2
+#define POLY_EXP 1
 float getTargetAngleFromUserInput(int16_t user){
 	float input = user / USER_INPUT_MAX;
 	float result = 1;
@@ -119,13 +121,13 @@ void core_updateController(){
 	//MX_RESET_I2C();
 	mpu9250_getMotion6(&ax, &ay, &az, &rotx, &roty, &rotz);
 
-	accel_x = -ax;//getAverage(avg[0], &avgIndex[0], &avgSum[0], ax);
-	accel_y = -ay;//getAverage(avg[1], &avgIndex[1], &avgSum[1], ay);
+	accel_x = ax;//-ax;//getAverage(avg[0], &avgIndex[0], &avgSum[0], ax);
+	accel_y = ay;//-ay;//getAverage(avg[1], &avgIndex[1], &avgSum[1], ay);
 	accel_z = az;//getAverage(avg[2], &avgIndex[2], &avgSum[2], az);
 
-	gyro_pi = (roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
-	gyro_ro = -(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
-	gyro_ya = -(rotz - gyroOffsets[2]);
+	gyro_pi = roty;//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
+	gyro_ro = rotx;//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
+	gyro_ya = rotz;//-rotz;//-(rotz - gyroOffsets[2]);
 
 
 #define GYRO_SENS 16.384f
@@ -133,9 +135,15 @@ void core_updateController(){
 #define M_RAD_TO_DEG (180.0f/M_PI)
 #define M_DEG_TO_RAD (M_PI/180.f)
 	MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
-	roll = atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
+	if (!motorValid){
+		q0 = 1;
+		q1 = 0;
+		q2 = 0;
+		q3 = 0;
+	}
+	roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
 	pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
-	float yawSpeed = gyro_ya / GYRO_SENS;
+	float yawSpeed = -gyro_ya / GYRO_SENS;
 	/*#define ALPHA 0.9985
 	#define dt 0.002
 
@@ -199,10 +207,11 @@ void core_updateController(){
 		pitchPid.integral_part = 0;
 	}
 
+
 	ro = calculatePIDLoop(&rollPid, getTargetAngleFromUserInput(user_ro) + roll);
 	pi = calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
 	ya = calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
-	th = user_th * 2;
+	th = user_th * 2 + (abs(user_ro) + abs(user_pi)) * USER_INPUT_TO_THRUST;
 	if (user_th < 5 || !motorValid || errorState || !thrustWasInZero){
 		pwm_1 = 0;
 		pwm_2 = 0;
