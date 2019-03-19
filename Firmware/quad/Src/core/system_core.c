@@ -11,6 +11,7 @@
 #include "bsp/motors.h"
 #include "math.h"
 #include "core/pid.h"
+#include "core/kalman/MadgwickAHRS.h"
 
 int16_t ax, ay, az, rotx, roty, rotz;
 
@@ -42,7 +43,7 @@ uint8_t thrustWasInZero = 0;
 
 #define ANGLE_KP 4.1
 #define ANGLE_KD 320
-#define ANGLE_KI 0.008
+#define ANGLE_KI 0.000
 
 #define YAWSPEED_KP 5.0
 #define YAWSPEED_KD 30.0
@@ -122,9 +123,16 @@ void core_updateController(){
 	gyro_ya = -rotz;
 
 
-#define GYRO_SENS 16.384
-#define ALPHA 0.9985
-#define dt 0.002
+#define GYRO_SENS 16.384f
+#define ACC_SENS 1.0f//317.141f //any unit works
+#define M_RAD_TO_DEG (180.0f/M_PI)
+#define M_DEG_TO_RAD (M_PI/180.f)
+	MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
+	roll = atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
+	pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
+	float yawSpeed = gyro_ya / GYRO_SENS;
+	/*#define ALPHA 0.9985
+	#define dt 0.002
 
 	pitchGyro = (float)(gyro_pi) / GYRO_SENS * dt;
 	pitch += pitchGyro;
@@ -144,7 +152,7 @@ void core_updateController(){
 			rollAcc = atan2f((float)accel_y, (float)accel_z) * 180 / M_PI;
 			roll = roll * ALPHA + rollAcc * (1 - ALPHA);
 		}
-	}
+	}*/
 
 	int16_t userInputMin = 1000;
 	int16_t userInputMax = 2000;

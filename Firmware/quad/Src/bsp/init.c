@@ -44,13 +44,13 @@ void initBsp(){
 		MX_RESET_I2C();
 		mpu9250_setFullScaleGyroRange(MPU9250_GYRO_FS_2000);
 	}
-	while (mpu9250_getFChoice_b() != 0){
+	while (mpu9250_getFChoice_b() != 2){
 		MX_RESET_I2C();
-		mpu9250_setFChoice_b(0);
+		mpu9250_setFChoice_b(2);
 	}
-	while (mpu9250_getDLPFMode() != 3){
+	while (mpu9250_getDLPFMode() != 0){
 		MX_RESET_I2C();
-		mpu9250_setDLPFMode(3);
+		mpu9250_setDLPFMode(0);
 	}
 	while (mpu9250_getAccelDPFL() != 3){
 		MX_RESET_I2C();
