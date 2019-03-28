@@ -9,12 +9,14 @@
 #include "bsp/mpu9250_regs.h"
 #include "main.h"
 #include "device_interface.h"
+#include "spi.h"
+#include "i2c.h"
 
-extern TIM_HandleTypeDef htim1, htim2, htim3, htim4;
-extern I2C_HandleTypeDef hi2c2;
 
 void MX_RESET_I2C(void);
 
+
+static uint8_t i2c_buffer[16] = {0};
 static int16_t i2c_read(uint16_t address, uint8_t* buffer, uint16_t length){
 	uint8_t addr = address;
 	if (HAL_I2C_Master_Transmit(&hi2c2, 0x68 << 1, &addr, 1, 10) == HAL_OK){
@@ -27,8 +29,6 @@ static int16_t i2c_read(uint16_t address, uint8_t* buffer, uint16_t length){
 		return -1;
 	}
 }
-
-static uint8_t i2c_buffer[16] = {0};
 static int16_t i2c_write(uint16_t address, uint8_t* buffer, uint16_t length){
 	i2c_buffer[0] = address;
 	for (uint16_t i = 0; i < length; i++){
@@ -41,10 +41,45 @@ static int16_t i2c_write(uint16_t address, uint8_t* buffer, uint16_t length){
 	}
 }
 
-void initBsp(){
-	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_2);
+static uint8_t spi_buffer[16] = {0};
+static uint8_t rx_buffer[16] = {0};
+static int16_t spi_read(uint16_t address, uint8_t* buffer, uint16_t length){
+	spi_buffer[0] = address;
+	spi_buffer[0] |= 0x80;
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
+	if (HAL_SPI_TransmitReceive(&hspi1, spi_buffer, rx_buffer, length + 1, 10) == HAL_OK){
+		for (uint16_t i = 0; i < length; i++){
+			buffer[i] = rx_buffer[i + 1];
+		}
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+		return length;
+	} else {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+		return -1;
+	}
+}
+static int16_t spi_write(uint16_t address, uint8_t* buffer, uint16_t length){
+	spi_buffer[0] = address;
+	spi_buffer[0] &= 0x7f;
+	for (uint16_t i = 0; i < length; i++){
+		spi_buffer[i+1] = buffer[i];
+	}
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
+	if (HAL_SPI_Transmit(&hspi1, spi_buffer, length + 1, 10) == HAL_OK){
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+		HAL_Delay(1);
+		return length;
+	} else {
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+		HAL_Delay(1);
+		return -1;
+	}
+}
 
-	htim2.Instance->CCR1 = 1023;
+void initBsp(){
+	//HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_2);
+
+	/*htim2.Instance->CCR1 = 1023;
 	htim3.Instance->CCR2 = 1023;
 	htim3.Instance->CCR4 = 1023;
 	htim4.Instance->CCR4 = 1023;
@@ -52,7 +87,7 @@ void initBsp(){
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
-	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);*/
 
 	DeviceInterface mpu_i2c;
 	mpu_i2c.read = i2c_read;
@@ -61,10 +96,18 @@ void initBsp(){
 	Mpu9250Device mpu_device;
 	mpu_device.interface = &mpu_i2c;
 
-	mpu9250_initialize(&mpu_device);
+	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+
+	//mpu9250_switchSPIEnabled(&mpu_device, 1);
+	//uint8_t sendData = 0x10;
+	//HAL_Delay(100);
+	//spi_write(0x6A, &sendData, 1);
+	//HAL_Delay(1000);
+	//mpu9250_initialize(&mpu_device);
 	volatile uint8_t status;
 	while(1){
 		status = mpu9250_testConnection(&mpu_device);
+		HAL_Delay(10);
 	}
 
 	//mpu9250_initialize();

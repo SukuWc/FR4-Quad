@@ -5,7 +5,7 @@
  *      Author: danim
  */
 
-#include "bmp280.h"
+#include "bsp/bmp280.h"
 #include "i2cif.h"
 
 static uint16_t dig_T1;
