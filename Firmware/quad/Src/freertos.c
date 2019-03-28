@@ -52,6 +52,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
@@ -77,11 +78,25 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
+osThreadId systemLoggerTaskHandle;
+osThreadId systemCoreTaskHandle;
+osTimerId controlTimerHandle;
+osTimerId positionUpdateTimerHandle;
+osTimerId sendLogTimerHandle;
+osSemaphoreId loggerLockHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
    
 /* USER CODE END FunctionPrototypes */
+
+void SystemLoggerTask(void const * argument);
+extern void SystemCoreTask(void const * argument);
+extern void ControlEvent(void const * argument);
+extern void PositionUpdateEvent(void const * argument);
+extern void SendLogEvent(void const * argument);
+
+void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* Hook prototypes */
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
@@ -103,6 +118,83 @@ void vApplicationDaemonTaskStartupHook(void)
 	initCore();
 }
 /* USER CODE END DAEMON_TASK_STARTUP_HOOK */
+
+/**
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
+  /* USER CODE BEGIN Init */
+       
+  /* USER CODE END Init */
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* definition and creation of loggerLock */
+  osSemaphoreDef(loggerLock);
+  loggerLockHandle = osSemaphoreCreate(osSemaphore(loggerLock), 1);
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* Create the timer(s) */
+  /* definition and creation of controlTimer */
+  osTimerDef(controlTimer, ControlEvent);
+  controlTimerHandle = osTimerCreate(osTimer(controlTimer), osTimerPeriodic, NULL);
+
+  /* definition and creation of positionUpdateTimer */
+  osTimerDef(positionUpdateTimer, PositionUpdateEvent);
+  positionUpdateTimerHandle = osTimerCreate(osTimer(positionUpdateTimer), osTimerPeriodic, NULL);
+
+  /* definition and creation of sendLogTimer */
+  osTimerDef(sendLogTimer, SendLogEvent);
+  sendLogTimerHandle = osTimerCreate(osTimer(sendLogTimer), osTimerPeriodic, NULL);
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* Create the thread(s) */
+  /* definition and creation of systemLoggerTask */
+  osThreadDef(systemLoggerTask, SystemLoggerTask, osPriorityBelowNormal, 0, 512);
+  systemLoggerTaskHandle = osThreadCreate(osThread(systemLoggerTask), NULL);
+
+  /* definition and creation of systemCoreTask */
+  osThreadDef(systemCoreTask, SystemCoreTask, osPriorityRealtime, 0, 128);
+  systemCoreTaskHandle = osThreadCreate(osThread(systemCoreTask), NULL);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+}
+
+/* USER CODE BEGIN Header_SystemLoggerTask */
+/**
+  * @brief  Function implementing the systemLoggerTask thread.
+  * @param  argument: Not used 
+  * @retval None
+  */
+/* USER CODE END Header_SystemLoggerTask */
+__weak void SystemLoggerTask(void const * argument)
+{
+
+  /* USER CODE BEGIN SystemLoggerTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END SystemLoggerTask */
+}
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */

@@ -10,6 +10,7 @@
 #include "bsp/ppm_handler.h"
 #include "bsp/motors.h"
 #include "math.h"
+#include "bsp/mpu9250.h"
 #include "core/pid.h"
 #include "core/kalman/MadgwickAHRS.h"
 
@@ -19,6 +20,7 @@ uint32_t lastMotorValid = 0;
 volatile float pitch = 0;
 volatile float roll = 0;
 volatile float yawn = 0;
+volatile float yawSpeed = 0;
 volatile float pitchGyro = 0;
 volatile float rollGyro = 0;
 volatile float pitchAcc = 0;
@@ -44,11 +46,11 @@ uint8_t thrustWasInZero = 0;
 #define PID_CLAMP_MAX 64
 
 #define ANGLE_KP 2.5
-#define ANGLE_KD 320
-#define ANGLE_KI 0.0
+#define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KI (0.0 * CONTROL_LOOP_PERIOD_MS)
 
 #define YAWSPEED_KP 5.0
-#define YAWSPEED_KD 30.0
+#define YAWSPEED_KD (60.0 / CONTROL_LOOP_PERIOD_MS)
 #define YAWSPEED_KI 0.0
 
 PIDStruct rollPid;
@@ -65,11 +67,20 @@ int32_t gyroOffsetSum[3] = {0};
 uint16_t gyroOffsetIndex = 0;
 int16_t gyroOffsets[3] = {0};
 
-void ControlLoop(const void* argument){
+void ControlEvent(const void* argument){
 	if (inProcess){
 		errorState = 1;
+		while(1){}
 	}
 	sNotifySystemCore(EVENT_CONTROLLER_UPDATE);
+}
+
+void PositionUpdateEvent(const void* argument){
+	if (inProcess){
+		errorState = 1;
+		while(1){}
+	}
+	sNotifySystemCore(EVENT_POSITION_UPDATE);
 }
 
 /*int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
@@ -105,45 +116,22 @@ float getTargetYawSpeedFromUserInput(int16_t user){
 	return input * USER_YAW_MAX;
 }
 
-void core_updateController(){
-	//sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
+extern Mpu9250Device mpu_device;
 
-
-	uint32_t currentTick = HAL_GetTick();
-	if (ppm_valid){
-		ppm_valid = 0;
-		lastMotorValid = xTaskGetTickCount();
-	}
-	uint8_t motorValid = !(lastMotorValid == 0 || xTaskGetTickCount() - lastMotorValid >= pdMS_TO_TICKS(100));
-
-	inProcess = 1;
-
+void core_updatePosition(){
 	//MX_RESET_I2C();
-	mpu9250_getMotion6(&ax, &ay, &az, &rotx, &roty, &rotz);
+	inProcess = 1;
+	mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &rotx, &roty, &rotz);
 
-	accel_x = ax;//-ax;//getAverage(avg[0], &avgIndex[0], &avgSum[0], ax);
-	accel_y = ay;//-ay;//getAverage(avg[1], &avgIndex[1], &avgSum[1], ay);
-	accel_z = az;//getAverage(avg[2], &avgIndex[2], &avgSum[2], az);
+	accel_x = ax;
+	accel_y = ay;
+	accel_z = az;
 
-	gyro_pi = roty;//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
-	gyro_ro = rotx;//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
-	gyro_ya = rotz;//-rotz;//-(rotz - gyroOffsets[2]);
+	gyro_pi = (roty - gyroOffsets[1]);//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
+	gyro_ro = (rotx - gyroOffsets[0]);//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
+	gyro_ya = (rotz - gyroOffsets[2]);//-rotz;//-(rotz - gyroOffsets[2]);
 
 
-#define GYRO_SENS 16.384f
-#define ACC_SENS 1.0f//317.141f //any unit works
-#define M_RAD_TO_DEG (180.0f/M_PI)
-#define M_DEG_TO_RAD (M_PI/180.f)
-	MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
-	if (!motorValid){
-		q0 = 1;
-		q1 = 0;
-		q2 = 0;
-		q3 = 0;
-	}
-	roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
-	pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
-	float yawSpeed = -gyro_ya / GYRO_SENS;
 	/*#define ALPHA 0.9985
 	#define dt 0.002
 
@@ -166,6 +154,36 @@ void core_updateController(){
 			roll = roll * ALPHA + rollAcc * (1 - ALPHA);
 		}
 	}*/
+
+
+	#define GYRO_SENS 16.384f
+	#define ACC_SENS 1.0f//317.141f //any unit works
+	#define M_RAD_TO_DEG (180.0f/M_PI)
+	#define M_DEG_TO_RAD (M_PI/180.f)
+	if (!thrustWasInZero){
+		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
+		q0 = 1;
+		q1 = 0;
+		q2 = 0;
+		q3 = 0;
+	} else {
+		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
+	}
+	roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
+	pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
+	yawSpeed = -gyro_ya / GYRO_SENS;
+	inProcess = 0;
+}
+
+void core_updateController(){
+	uint32_t currentTick = HAL_GetTick();
+	if (ppm_valid){
+		ppm_valid = 0;
+		lastMotorValid = xTaskGetTickCount();
+	}
+	uint8_t motorValid = !(lastMotorValid == 0 || xTaskGetTickCount() - lastMotorValid >= pdMS_TO_TICKS(100));
+
+	//inProcess = 1;
 
 	int16_t userInputMin = 1000;
 	int16_t userInputMax = 2000;
@@ -202,10 +220,10 @@ void core_updateController(){
 	volatile int32_t pwm_1;
 	volatile int32_t pwm_2;
 
-	if (user_th < 80){
+	/*if (user_th < 80){
 		rollPid.integral_part = 0;
 		pitchPid.integral_part = 0;
-	}
+	}*/
 
 
 	ro = calculatePIDLoop(&rollPid, getTargetAngleFromUserInput(user_ro) + roll);
@@ -238,12 +256,12 @@ void core_updateController(){
 		pwm_2 = th + ro - pi - ya;
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
-	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
 	inProcess = 0;
 }
 
 void SystemCoreTask(void const * argument){
-	xTimerStart(controlTimerHandle, 0);
+	/*xTimerStart(positionUpdateTimerHandle, 0);
+	xTimerStart(controlTimerHandle, 0);*/
 	uint32_t notifiedValue;
 	uint8_t leadingZeroIndex;
 	initializePIDStruct(&rollPid, ANGLE_KP, ANGLE_KD, ANGLE_KI, PID_CLAMP_MIN, PID_CLAMP_MAX);
@@ -255,6 +273,7 @@ void SystemCoreTask(void const * argument){
 				notifiedValue &= UINT32_MAX >> (leadingZeroIndex + 1);
 				switch(leadingZeroIndex){
 					case EVENT_CONTROLLER_UPDATE: core_updateController(); break;
+					case EVENT_POSITION_UPDATE: core_updatePosition(); break;
 				}
 			}
 		}
