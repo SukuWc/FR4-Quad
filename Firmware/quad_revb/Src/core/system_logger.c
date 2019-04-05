@@ -8,6 +8,7 @@
 #include "bsp/logger.h"
 #include "limits.h"
 #include "core/system_logger.h"
+#include "core/system_core.h"
 #include "core/pid.h"
 
 extern osSemaphoreId loggerLockHandle;
@@ -44,9 +45,15 @@ void logger_sendAccelerometerMessage(){
 	sendMessage(buffer, msgLength);
 }
 
+void SendLogEvent(const void* argument){
+	sNotifyLogger(ACCELERATION_SENSOR_UPDATED);
+}
+
 void SystemLoggerTask(const void* argument){
-	uint32_t notifiedValue;
+	for(;;){}
+	/*uint32_t notifiedValue;
 	uint8_t leadingZeroIndex;
+	xTimerStart(sendLogTimerHandle, 0);
 	for(;;){
 		xSemaphoreTake(loggerLockHandle, portMAX_DELAY);
 		if (xTaskNotifyWait(0x00, ULONG_MAX, &notifiedValue, portMAX_DELAY)){
@@ -57,7 +64,7 @@ void SystemLoggerTask(const void* argument){
 				}
 			}
 		}
-	}
+	}*/
 }
 
 void messageFinishedFromISR(){

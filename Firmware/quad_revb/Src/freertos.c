@@ -81,6 +81,8 @@
 osThreadId systemLoggerTaskHandle;
 osThreadId systemCoreTaskHandle;
 osTimerId controlTimerHandle;
+osTimerId positionUpdateTimerHandle;
+osTimerId sendLogTimerHandle;
 osSemaphoreId loggerLockHandle;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,7 +92,9 @@ osSemaphoreId loggerLockHandle;
 
 void SystemLoggerTask(void const * argument);
 extern void SystemCoreTask(void const * argument);
-extern void ControlLoop(void const * argument);
+extern void ControlEvent(void const * argument);
+extern void PositionUpdateEvent(void const * argument);
+extern void SendLogEvent(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -140,8 +144,16 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the timer(s) */
   /* definition and creation of controlTimer */
-  osTimerDef(controlTimer, ControlLoop);
+  osTimerDef(controlTimer, ControlEvent);
   controlTimerHandle = osTimerCreate(osTimer(controlTimer), osTimerPeriodic, NULL);
+
+  /* definition and creation of positionUpdateTimer */
+  osTimerDef(positionUpdateTimer, PositionUpdateEvent);
+  positionUpdateTimerHandle = osTimerCreate(osTimer(positionUpdateTimer), osTimerPeriodic, NULL);
+
+  /* definition and creation of sendLogTimer */
+  osTimerDef(sendLogTimer, SendLogEvent);
+  sendLogTimerHandle = osTimerCreate(osTimer(sendLogTimer), osTimerPeriodic, NULL);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */

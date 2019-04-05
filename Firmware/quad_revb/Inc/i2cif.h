@@ -9,7 +9,6 @@
 #define I2CIF_H_
 
 #include "main.h"
-#include "i2c.h"
 
 int8_t i2c_readBit(I2C_HandleTypeDef *i2c, uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data);
 int8_t i2c_readBits(I2C_HandleTypeDef *i2c,uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data);

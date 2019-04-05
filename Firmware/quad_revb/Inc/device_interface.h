@@ -9,13 +9,7 @@
 #define DEVICE_INTERFACE_H_
 
 #include "main.h"
-
-typedef struct DeviceInterface_T{
-	int16_t (*read)(uint16_t address, uint8_t* buffer, uint16_t length);
-	int16_t (*write)(uint16_t address, uint8_t* buffer, uint16_t length);
-	int16_t (*lock)();
-	int16_t (*unlock)();
-} DeviceInterface;
+#include "communication_interface.h"
 
 int16_t readBit(DeviceInterface* device, uint16_t regAddr, uint8_t bitNum, uint8_t *data);
 int16_t readBits(DeviceInterface* device, uint16_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data);
