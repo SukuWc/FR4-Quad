@@ -9,7 +9,7 @@
 int16_t readBit(DeviceInterface* device, uint16_t regAddr, uint8_t bitNum, uint8_t *data) {
     uint8_t b;
     uint8_t count = device->read(regAddr, &b, 1);
-    *data = b & (1 << bitNum);
+    *data = (b >> bitNum) & 1;
     return count;
 }
 
