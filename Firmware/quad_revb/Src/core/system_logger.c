@@ -4,13 +4,13 @@
  *  Created on: 4 Mar 2019
  *      Author: danim
  */
-#include "cmsis_os.h"
+#include "FreeRTOS.h"
 #include "bsp/logger.h"
 #include "limits.h"
 #include "core/system_logger.h"
 #include "core/pid.h"
 
-extern osSemaphoreId loggerLockHandle;
+extern xSemaphoreHandle loggerLockHandle;
 
 static uint8_t buffer[256] = {0};
 extern int16_t ax, ay, az, rotx, roty, rotz;

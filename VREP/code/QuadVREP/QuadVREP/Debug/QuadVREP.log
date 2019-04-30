@@ -1,0 +1,4 @@
+﻿  main.c
+     Creating library C:\prog\FR4-Quad\VREP\code\QuadVREP\Debug\QuadVREP.lib and object C:\prog\FR4-Quad\VREP\code\QuadVREP\Debug\QuadVREP.exp
+main.obj : error LNK2001: unresolved external symbol _SystemCoreClock
+C:\prog\FR4-Quad\VREP\code\QuadVREP\Debug\QuadVREP.exe : fatal error LNK1120: 1 unresolved externals

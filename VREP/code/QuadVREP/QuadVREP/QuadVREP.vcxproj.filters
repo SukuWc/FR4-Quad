@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="VRep Source">
+      <UniqueIdentifier>{5c62c11b-8ddc-413a-b6ce-1f5182890307}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VRep Source\Include">
+      <UniqueIdentifier>{24436dcb-054b-4404-af80-084d04e38664}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VRep Source\Source">
+      <UniqueIdentifier>{1bc9acad-72d5-48fc-9e38-24d7684ae663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS Sources">
+      <UniqueIdentifier>{7653fccd-504c-4e71-9295-32c15605046d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS Sources\Include">
+      <UniqueIdentifier>{c815c3ac-08a5-42b3-90de-7775ecf7eea7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS Sources\Source">
+      <UniqueIdentifier>{71f51b97-f410-41e8-8a7f-aa99be1e6477}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FreeRTOS Sources\Source\Portable">
+      <UniqueIdentifier>{2bb60110-e175-4358-93d2-7e9feebbaf88}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\remoteApi\extApi.c">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\remoteApi\extApiPlatform.c">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\luaFunctionData.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\luaFunctionDataItem.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\scriptFunctionData.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\scriptFunctionDataItem.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\shared_memory.c">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\socketInConnection.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\socketOutConnection.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\v_repLib.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackArray.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackBool.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackMap.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackNull.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackNumber.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackObject.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\Program Files\V-REP3\V-REP_PRO_EDU\programming\common\stack\stackString.cpp">
+      <Filter>VRep Source\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\croutine.c">
+      <Filter>FreeRTOS Sources\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\event_groups.c">
+      <Filter>FreeRTOS Sources\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\list.c">
+      <Filter>FreeRTOS Sources\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\queue.c">
+      <Filter>FreeRTOS Sources\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\tasks.c">
+      <Filter>FreeRTOS Sources\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\timers.c">
+      <Filter>FreeRTOS Sources\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MemMang\heap_4.c">
+      <Filter>FreeRTOS Sources\Source\Portable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW\port.c">
+      <Filter>FreeRTOS Sources\Source\Portable</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW\portmacro.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\croutine.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\deprecated_definitions.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\event_groups.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\FreeRTOS.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\list.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\mpu_prototypes.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\mpu_wrappers.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\portable.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\projdefs.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\queue.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\semphr.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\StackMacros.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\task.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\timers.h">
+      <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

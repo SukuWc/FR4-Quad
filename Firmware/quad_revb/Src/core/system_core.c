@@ -7,7 +7,6 @@
 #include "limits.h"
 #include "core/system_core.h"
 #include "core/system_logger.h"
-#include "bsp/ppm_handler.h"
 #include "bsp/motors.h"
 #include "math.h"
 #include "core/pid.h"

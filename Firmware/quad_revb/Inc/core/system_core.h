@@ -8,11 +8,12 @@
 #ifndef CORE_SYSTEM_CORE_H_
 #define CORE_SYSTEM_CORE_H_
 
-#include "cmsis_os.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /// From main.c
-extern osThreadId systemCoreTaskHandle;
-extern osTimerId controlTimerHandle;
+extern xTaskHandle systemCoreTaskHandle;
+extern xTimerHandle controlTimerHandle;
 
 
 #define CONTROL_LOOP_PERIOD_MS 2
