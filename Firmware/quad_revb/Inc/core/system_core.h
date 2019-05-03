@@ -10,6 +10,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "timers.h"
 
 /// From main.c
 extern xTaskHandle systemCoreTaskHandle;

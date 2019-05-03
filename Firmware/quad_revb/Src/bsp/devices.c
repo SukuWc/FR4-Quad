@@ -22,44 +22,34 @@ void initDevices(){
 	mpu_device.interface = &mpu_dev;
 	mpu9250_switchSPIEnabled(&mpu_device, 1);
 
-
-
 	while (mpu9250_testConnection(&mpu_device) == 0){
 
 	}
 	mpu9250_initialize(&mpu_device);
 
+	mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
 	while(mpu9250_getClockSource(&mpu_device) != MPU9250_CLOCK_PLL_XGYRO){
-		MX_RESET_I2C();
-		mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
 	}
+	mpu9250_setSleepEnabled(&mpu_device, 0);
 	while(mpu9250_getSleepEnabled(&mpu_device) != 0){
-		MX_RESET_I2C();
-		mpu9250_setSleepEnabled(&mpu_device, 0);
 	}
+	mpu9250_setFullScaleAccelRange(&mpu_device, MPU9250_ACCEL_FS_16);
 	while (mpu9250_getFullScaleAccelRange(&mpu_device) != 3){
-		MX_RESET_I2C();
-		mpu9250_setFullScaleAccelRange(&mpu_device, MPU9250_ACCEL_FS_16);
 	}
+	mpu9250_setFullScaleGyroRange(&mpu_device, MPU9250_GYRO_FS_2000);
 	while (mpu9250_getFullScaleGyroRange(&mpu_device) != 3){
-		MX_RESET_I2C();
-		mpu9250_setFullScaleGyroRange(&mpu_device, MPU9250_GYRO_FS_2000);
 	}
+	mpu9250_setFChoice_b(&mpu_device, 0);
 	while (mpu9250_getFChoice_b(&mpu_device) != 0){
-		MX_RESET_I2C();
-		mpu9250_setFChoice_b(&mpu_device, 0);
 	}
+	mpu9250_setDLPFMode(&mpu_device, 3);
 	while (mpu9250_getDLPFMode(&mpu_device) != 3){
-		MX_RESET_I2C();
-		mpu9250_setDLPFMode(&mpu_device, 3);
 	}
+	mpu9250_setAccelDPFL(&mpu_device, 3);
 	while (mpu9250_getAccelDPFL(&mpu_device) != 3){
-		MX_RESET_I2C();
-		mpu9250_setAccelDPFL(&mpu_device, 3);
 	}
+	mpu9250_setAccelF_b(&mpu_device, 0);
 	while (mpu9250_getAccelF_b(&mpu_device) != 0){
-		MX_RESET_I2C();
-		mpu9250_setAccelF_b(&mpu_device, 0);
 	}
 /*
 	while (mpu9250_getSlaveAddress(&mpu_device, 0) != 0x8c){

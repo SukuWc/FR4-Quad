@@ -207,10 +207,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void MX_RESET_I2C(){
-	HAL_I2C_DeInit(&hi2c2);
-	MX_I2C2_Init();
-}
 /* USER CODE END 4 */
 
 /**

@@ -9,9 +9,11 @@
 #include "bsp/motors.h"
 #include "math.h"
 #ifndef __SIMULATOR__
+
 #include "core/system_logger.h"
-#include "bsp/devices.h
+#include "bsp/devices.h"
 #include "bsp/mpu9250.h"
+
 #endif
 #include "core/pid.h"
 #include "core/kalman/MadgwickAHRS.h"
