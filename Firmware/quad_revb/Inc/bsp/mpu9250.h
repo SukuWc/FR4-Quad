@@ -2,12 +2,17 @@
 #define __mpu9250_H
 
 #include "main.h"
-#include "device_interface.h"
+#include "communication_interface.h"
 
 typedef struct Mpu9250Device_T{
 	DeviceInterface* interface;
 	uint8_t buffer[16];
 } Mpu9250Device;
+
+extern I2C_HandleTypeDef hi2c2;
+#define I2C_HANDLE &hi2c2
+#define I2C_ADDR 0x68
+#define delay(x) HAL_Delay(x)
 
 uint8_t mpu9250_getAccelDPFL(Mpu9250Device* mpu);
 void mpu9250_getAcceleration(Mpu9250Device* mpu, int16_t* x, int16_t* y, int16_t* z);

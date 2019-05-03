@@ -14,12 +14,17 @@
 /// From main.c
 extern xTaskHandle systemCoreTaskHandle;
 extern xTimerHandle controlTimerHandle;
+extern xTimerHandle positionUpdateTimerHandle;
+extern xTimerHandle sendLogTimerHandle;
 
 
-#define CONTROL_LOOP_PERIOD_MS 2
+#define CONTROL_LOOP_PERIOD_MS 10
+#define POSITION_LOOP_PERIOD_MS 1
+#define LOGGER_LOOP_PERIOD_MS 20
 
 enum SystemCoreNotificationFlags_T {
-	EVENT_CONTROLLER_UPDATE = 0
+	EVENT_CONTROLLER_UPDATE = 0,
+	EVENT_POSITION_UPDATE
 };
 
 #define sNotifySystemCore(event) xTaskNotify(systemCoreTaskHandle, (1 << (31 - (int)event)), eSetBits)
