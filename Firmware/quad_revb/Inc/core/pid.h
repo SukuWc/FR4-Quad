@@ -7,7 +7,7 @@
 
 #ifndef CORE_PID_H_
 #define CORE_PID_H_
-#include "main.h"
+#include "stdint.h"
 
 typedef struct pid_t{
 	float p;

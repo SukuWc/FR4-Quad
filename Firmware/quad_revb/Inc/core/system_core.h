@@ -13,10 +13,11 @@
 
 /// From main.c
 extern xTaskHandle systemCoreTaskHandle;
+#ifndef __SIMULATOR__
 extern xTimerHandle controlTimerHandle;
 extern xTimerHandle positionUpdateTimerHandle;
 extern xTimerHandle sendLogTimerHandle;
-
+#endif
 
 #define CONTROL_LOOP_PERIOD_MS 10
 #define POSITION_LOOP_PERIOD_MS 1

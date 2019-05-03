@@ -2,24 +2,71 @@
 #include "extApi.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "core\system_core.h"
+#include "math.h"
 
+#define M_RAD_TO_DEG (180.0/M_PI)
 
-extern uint32_t SystemCoreClock;
-void testFun(void *params) {
+int clientId;
+xTaskHandle systemCoreTaskHandle;
+xTaskHandle simulationTaskHandle;
+extern void SystemCoreTask(void const * argument);
+extern void joystickMain(void const * params);
+
+float simulatorRollAngle, simulatorPitchAngle, simulatorYawAngle;
+void mainSimulationTask(void *params) {
+	simxSynchronous(clientId, 1);
+	simxSynchronousTrigger(clientId);
+	int quadHandle;
+	simxGetObjectHandle(clientId, "Quadricopter", &quadHandle, simx_opmode_blocking);
 	while (1)
 	{
-		printf("%d", SystemCoreClock);
+		static float angles[3];
+		simxGetObjectOrientation(clientId, quadHandle, -1, angles, simx_opmode_blocking);
+		simulatorRollAngle = angles[0] * M_RAD_TO_DEG;
+		simulatorPitchAngle = angles[1] * M_RAD_TO_DEG;
+		simulatorYawAngle = angles[2] * M_RAD_TO_DEG;
+
+		sNotifySystemCore(EVENT_POSITION_UPDATE);
+		sNotifySystemCore(EVENT_CONTROLLER_UPDATE);
+		xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
+		simxSynchronousTrigger(clientId);
 	}
 }
-void main() {
-	xTaskCreate(testFun,			/* The function that implements the task. */
-		"Rx", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-		configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
-		NULL, 							/* The parameter passed to the task - not used in this simple case. */
-		tskIDLE_PRIORITY + 1,/* The priority assigned to the task. */
-		NULL);							/* The task handle is not required, so NULL is passed. */
 
-	vTaskStartScheduler();
+void controlFinished() {
+	xTaskNotify(simulationTaskHandle, 0, eNoAction);
+}
+void main() {
+
+
+	clientId = simxStart("127.0.0.1", 15678, 1, 0, 50000, 5);
+	if (clientId != -1) {
+		
+
+		xTaskCreate(mainSimulationTask,			/* The function that implements the task. */
+			"SimTask", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+			configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
+			NULL, 							/* The parameter passed to the task - not used in this simple case. */
+			tskIDLE_PRIORITY + 1,/* The priority assigned to the task. */
+			&simulationTaskHandle);
+		xTaskCreate(SystemCoreTask,			/* The function that implements the task. */
+			"SimTask", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+			configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
+			NULL, 							/* The parameter passed to the task - not used in this simple case. */
+			tskIDLE_PRIORITY + 1,/* The priority assigned to the task. */
+			&systemCoreTaskHandle);
+		xTaskCreate(joystickMain,			/* The function that implements the task. */
+			"Joystick", 							/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+			configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
+			NULL, 							/* The parameter passed to the task - not used in this simple case. */
+			tskIDLE_PRIORITY + 2,/* The priority assigned to the task. */
+			NULL);
+
+		vTaskStartScheduler();
+	} else {
+		printf("Could not connect!");
+	}
 
 	for (;;) {}
 	/*printf("Hello World!\r\n");

@@ -74,8 +74,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\prog\FR4-Quad\VREP\code\QuadVREP\QuadVREP\Include;C:\prog\FR4-Quad\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW;C:\prog\FR4-Quad\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\include\stack;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\include;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\remoteApi;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>MAX_EXT_API_CONNECTIONS=255;NON_MATLAB_PARSING;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0500;WINVER=0x400;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\prog\FR4-Quad\VREP\code\QuadVREP\QuadVREP\libenjoy;C:\prog\FR4-Quad\VREP\code\QuadVREP\QuadVREP\Include;C:\prog\FR4-Quad\Firmware\quad_revb\Inc;C:\prog\FR4-Quad\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW;C:\prog\FR4-Quad\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\include\stack;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\include;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\remoteApi;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__SIMULATOR__;_USE_MATH_DEFINES;MAX_EXT_API_CONNECTIONS=255;NON_MATLAB_PARSING;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0500;WINVER=0x400;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -137,7 +137,15 @@
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\queue.c" />
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\tasks.c" />
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\timers.c" />
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\kalman\MadgwickAHRS.c" />
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\pid.c" />
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\system_core.c" />
+    <ClCompile Include="CPU_instr.c" />
+    <ClCompile Include="ibus_handler.c" />
+    <ClCompile Include="libenjoy\libenjoy.c" />
+    <ClCompile Include="libenjoy\libenjoy_win32.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="motors.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\croutine.h" />
@@ -155,6 +163,7 @@
     <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\task.h" />
     <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\timers.h" />
     <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW\portmacro.h" />
+    <ClInclude Include="Include\FreeRTOSConfig.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

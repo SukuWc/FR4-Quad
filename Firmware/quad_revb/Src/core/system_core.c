@@ -6,13 +6,15 @@
  */
 #include "limits.h"
 #include "core/system_core.h"
-#include "core/system_logger.h"
 #include "bsp/motors.h"
 #include "math.h"
+#ifndef __SIMULATOR__
+#include "core/system_logger.h"
+#include "bsp/devices.h
 #include "bsp/mpu9250.h"
+#endif
 #include "core/pid.h"
 #include "core/kalman/MadgwickAHRS.h"
-#include "bsp/devices.h"
 #include "bsp/ibus_handler.h"
 
 int16_t ax, ay, az, rotx, roty, rotz;
@@ -46,9 +48,15 @@ uint8_t thrustWasInZero = 0;
 #define PID_CLAMP_MIN -64
 #define PID_CLAMP_MAX 64
 
+#ifndef __SIMULATOR__
 #define ANGLE_KP 2.5
 #define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
 #define ANGLE_KI (0.0 * CONTROL_LOOP_PERIOD_MS)
+#else
+#define ANGLE_KP 2.5
+#define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KI (0.0 * CONTROL_LOOP_PERIOD_MS)
+#endif
 
 #define YAWSPEED_KP 5.0
 #define YAWSPEED_KD (60.0 / CONTROL_LOOP_PERIOD_MS)
@@ -117,6 +125,7 @@ float getTargetYawSpeedFromUserInput(int16_t user){
 	return input * USER_YAW_MAX;
 }
 
+#ifndef __SIMULATOR__
 extern Mpu9250Device mpu_device;
 
 void core_updatePosition(){
@@ -175,11 +184,20 @@ void core_updatePosition(){
 	yawSpeed = -gyro_ya / GYRO_SENS;
 	inProcess = 0;
 }
+#else
+extern float simulatorRollAngle, simulatorPitchAngle, simulatorYawAngle;
+static float oldYawnAngle = 0;
+void core_updatePosition() {
+	roll = simulatorRollAngle;
+	pitch = -simulatorPitchAngle;
+	yawSpeed = (simulatorYawAngle - oldYawnAngle) / 0.01f;
+	oldYawnAngle = simulatorYawAngle;
+}
+#endif
 
 void core_updateController(){
-	uint32_t currentTick = HAL_GetTick();
 	if (receiverValid()){
-		ppm_valid = 0;
+		//ppm_valid = 0;
 		lastMotorValid = xTaskGetTickCount();
 	}
 	uint8_t motorValid = !(lastMotorValid == 0 || xTaskGetTickCount() - lastMotorValid >= pdMS_TO_TICKS(100));
@@ -257,11 +275,14 @@ void core_updateController(){
 		pwm_2 = th + ro - pi - ya;
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
+#ifdef __SIMULATOR__
+	controlFinished();
+#endif
 }
 
 void SystemCoreTask(void const * argument){
 	/*xTimerStart(positionUpdateTimerHandle, 0);*/
-	xTimerStart(controlTimerHandle, 0);
+	/*xTimerStart(controlTimerHandle, 0);*/
 	uint32_t notifiedValue;
 	uint8_t leadingZeroIndex;
 	initializePIDStruct(&rollPid, ANGLE_KP, ANGLE_KD, ANGLE_KI, PID_CLAMP_MIN, PID_CLAMP_MAX);

@@ -34,6 +34,18 @@
     <Filter Include="FreeRTOS Sources\Source\Portable">
       <UniqueIdentifier>{2bb60110-e175-4358-93d2-7e9feebbaf88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quad Sources">
+      <UniqueIdentifier>{a8065221-bf04-4499-8148-494508355aa4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{866b3b2f-9c8c-4853-9f19-35c62818149d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bsp">
+      <UniqueIdentifier>{f1e9d1e3-6d2d-44c1-a53f-a45bd8370594}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Enjoy Source">
+      <UniqueIdentifier>{24652e7f-1e86-4f5e-92bd-0deb0d5bf7b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -114,6 +126,30 @@
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW\port.c">
       <Filter>FreeRTOS Sources\Source\Portable</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\pid.c">
+      <Filter>Quad Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\system_core.c">
+      <Filter>Quad Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\kalman\MadgwickAHRS.c">
+      <Filter>Quad Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="motors.c">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="CPU_instr.c">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="ibus_handler.c">
+      <Filter>Source Files\bsp</Filter>
+    </ClCompile>
+    <ClCompile Include="libenjoy\libenjoy.c">
+      <Filter>Enjoy Source</Filter>
+    </ClCompile>
+    <ClCompile Include="libenjoy\libenjoy_win32.c">
+      <Filter>Enjoy Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\portable\MSVC-MingW\portmacro.h">
@@ -160,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Firmware\quad_revb\Middlewares\Third_Party\FreeRTOS\Source\include\timers.h">
       <Filter>FreeRTOS Sources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\FreeRTOSConfig.h">
+      <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
