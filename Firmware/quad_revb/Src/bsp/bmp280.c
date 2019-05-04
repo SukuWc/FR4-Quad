@@ -28,8 +28,9 @@ uint8_t bmp280_init(Bmp280Device* bmp280)
   bmp280->dig_P8 = bmp280_bmp280ReadS16LE(bmp280, BMP280_REG_DIG_P8);
   bmp280->dig_P9 = bmp280_bmp280ReadS16LE(bmp280, BMP280_REG_DIG_P9);
 
-  bmp280_writeRegister(bmp280, BMP280_REG_CONFIG, 0);
-  bmp280_writeRegister(bmp280, BMP280_REG_CONTROL, 0x3F);
+  bmp280_writeRegister(bmp280, BMP280_REG_CONFIG, 0x1C);
+  bmp280_writeRegister(bmp280, BMP280_REG_CONTROL, 0x5F);
+
   return 1;
 }
 
@@ -37,7 +38,7 @@ float bmp280_getTemperature(Bmp280Device* bmp280)
 {
   volatile int32_t var1, var2;
 
-  volatile int32_t adc_T = bmp280_bmp280Read24(bmp280, BMP280_REG_TEMPDATA);
+  volatile int32_t adc_T = bmp280->readTemp;//bmp280_bmp280Read24(bmp280, BMP280_REG_TEMPDATA);
   adc_T >>= 4;
   var1 = (((adc_T >> 3) - ((int32_t)(bmp280->dig_T1 << 1))) *
     ((int32_t)bmp280->dig_T2)) >> 11;
@@ -47,18 +48,18 @@ float bmp280_getTemperature(Bmp280Device* bmp280)
     ((int32_t)bmp280->dig_T3)) >> 14;
 
   bmp280->t_fine = var1 + var2;
-  float T = (bmp280->t_fine * 5 + 128) >> 8;
+  volatile float T = (bmp280->t_fine * 5 + 128) >> 8;
   return T / 100;
 }
 
 float bmp280_getPressure(Bmp280Device* bmp280)
 {
-  int64_t var1, var2, p;
+  volatile int64_t var1, var2, p;
 
   // Call getTemperature to get t_fine
   bmp280_getTemperature(bmp280);
 
-  int32_t adc_P = bmp280_bmp280Read24(bmp280, BMP280_REG_PRESSUREDATA);
+  int32_t adc_P = bmp280->readPressure;//bmp280_bmp280Read24(bmp280, BMP280_REG_PRESSUREDATA);
   adc_P >>= 4;
 
   var1 = ((int64_t)bmp280->t_fine) - 128000;
@@ -82,6 +83,7 @@ float bmp280_getPressure(Bmp280Device* bmp280)
 
 float bmp280_calcAltitude(Bmp280Device* bmp280)
 {
+	bmp280_getPressure(bmp280);
   float A = (bmp280->lastPressure)/101325;
   float C = 44330 * (1 - pow(A,0.1903));
   return C;

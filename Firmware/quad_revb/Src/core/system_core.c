@@ -13,6 +13,7 @@
 #include "core/system_logger.h"
 #include "bsp/devices.h"
 #include "bsp/mpu9250.h"
+#include "bsp/bmp280.h"
 
 #endif
 #include "core/pid.h"
@@ -30,8 +31,12 @@ volatile float pitchGyro = 0;
 volatile float rollGyro = 0;
 volatile float pitchAcc = 0;
 volatile float rollAcc = 0;
+volatile float height = 0;
 
-int16_t accel_x, accel_y, accel_z, gyro_ro, gyro_pi, gyro_ya;
+uint32_t lastPressureTick = 0;
+
+int16_t accel_x, accel_y, accel_z, gyro_ro, gyro_pi, gyro_ya, mag_x, mag_y, mag_z;
+uint32_t pressure, temperature;
 int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
@@ -47,13 +52,13 @@ uint8_t thrustWasInZero = 0;
 
 #define USER_INPUT_TO_THRUST 0.3f
 
-#define PID_CLAMP_MIN -64
-#define PID_CLAMP_MAX 64
+#define PID_CLAMP_MIN -32
+#define PID_CLAMP_MAX 32
 
 #ifndef __SIMULATOR__
-#define ANGLE_KP 2.5
-#define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
-#define ANGLE_KI (0.0 * CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KP 3
+#define ANGLE_KD (0 / CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KI (0.000 * CONTROL_LOOP_PERIOD_MS)
 #else
 #define ANGLE_KP 2.5
 #define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
@@ -62,7 +67,7 @@ uint8_t thrustWasInZero = 0;
 
 #define YAWSPEED_KP 5.0
 #define YAWSPEED_KD (60.0 / CONTROL_LOOP_PERIOD_MS)
-#define YAWSPEED_KI 0.0
+#define YAWSPEED_KI (0.000 * CONTROL_LOOP_PERIOD_MS)
 
 PIDStruct rollPid;
 PIDStruct pitchPid;
@@ -77,6 +82,9 @@ int32_t ya = 0; // signed int, 0 is center, positive turns left
 int32_t gyroOffsetSum[3] = {0};
 uint16_t gyroOffsetIndex = 0;
 int16_t gyroOffsets[3] = {0};
+
+float orientationSum[3] = {0};
+uint8_t orientationCount = 0;
 
 void ControlEvent(const void* argument){
 	if (inProcess){
@@ -129,19 +137,53 @@ float getTargetYawSpeedFromUserInput(int16_t user){
 
 #ifndef __SIMULATOR__
 extern Mpu9250Device mpu_device;
+extern Bmp280Device bmp_device;
 
 void core_updatePosition(){
 	//MX_RESET_I2C();
 	inProcess = 1;
-	mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &rotx, &roty, &rotz);
+	//mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &rotx, &roty, &rotz);
+	static uint8_t motionBuffer[28];
+	mpu9250_getMotionAndExternalBytes(&mpu_device, motionBuffer, 28);
+
+    ax = (((int16_t)motionBuffer[0]) << 8) | motionBuffer[1];
+    ay = (((int16_t)motionBuffer[2]) << 8) | motionBuffer[3];
+    az = (((int16_t)motionBuffer[4]) << 8) | motionBuffer[5];
+    rotx = (((int16_t)motionBuffer[8]) << 8) | motionBuffer[9];
+    roty = (((int16_t)motionBuffer[10]) << 8) | motionBuffer[11];
+    rotz = (((int16_t)motionBuffer[12]) << 8) | motionBuffer[13];
+
+    uint8_t magnetStatus = motionBuffer[14];
+    mag_x = (((int16_t)motionBuffer[16]) << 8 ) | motionBuffer[15];
+    mag_y = (((int16_t)motionBuffer[18]) << 8 ) | motionBuffer[17];
+    mag_z = (((int16_t)motionBuffer[20]) << 8 ) | motionBuffer[19];
+    if (magnetStatus & 1){
+    	mag_x = 0;
+    	mag_y = 0;
+    	mag_z = 0;
+    }
+
+    if (xTaskGetTickCount() - lastPressureTick > pdMS_TO_TICKS(40)){
+        pressure = (((uint32_t)motionBuffer[22]) << 24) | (((uint32_t)motionBuffer[23]) << 16) | (((uint32_t)motionBuffer[24]) << 8);
+        pressure >>= 8;
+
+        temperature = (((uint32_t)motionBuffer[25]) << 24) | (((uint32_t)motionBuffer[26]) << 16) | (((uint32_t)motionBuffer[27]) << 8);
+        temperature >>= 8;
+
+        bmp_device.readPressure = pressure;
+        bmp_device.readTemp = temperature;
+
+        height = bmp280_calcAltitude(&bmp_device);
+    }
+
 
 	accel_x = ax;
 	accel_y = ay;
 	accel_z = az;
 
-	gyro_pi = (roty - gyroOffsets[1]);//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
-	gyro_ro = (rotx - gyroOffsets[0]);//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
-	gyro_ya = (rotz - gyroOffsets[2]);//-rotz;//-(rotz - gyroOffsets[2]);
+	gyro_pi = roty - gyroOffsets[1];//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
+	gyro_ro = rotx - gyroOffsets[0];//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
+	gyro_ya = rotz - gyroOffsets[2];//-rotz;//-(rotz - gyroOffsets[2]);
 
 
 	/*#define ALPHA 0.9985
@@ -172,17 +214,21 @@ void core_updatePosition(){
 	#define ACC_SENS 1.0f//317.141f //any unit works
 	#define M_RAD_TO_DEG (180.0f/M_PI)
 	#define M_DEG_TO_RAD (M_PI/180.f)
-	if (!thrustWasInZero){
+	if (user_th == 0){
 		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
 		q0 = 1;
 		q1 = 0;
 		q2 = 0;
 		q3 = 0;
 	} else {
-		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
+
+		MadgwickAHRSupdate(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS, mag_x, mag_y, mag_z);
 	}
 	roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
 	pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
+	orientationSum[0] += roll;
+	orientationSum[1] += pitch;
+	orientationCount++;
 	yawSpeed = -gyro_ya / GYRO_SENS;
 	inProcess = 0;
 }
@@ -241,11 +287,17 @@ void core_updateController(){
 	volatile int32_t pwm_1;
 	volatile int32_t pwm_2;
 
-	/*if (user_th < 80){
+	if (user_th < 80){
 		rollPid.integral_part = 0;
 		pitchPid.integral_part = 0;
-	}*/
+		yawPid.integral_part = 0;
+	}
 
+	roll = orientationSum[0] / orientationCount;
+	pitch = orientationSum[1] / orientationCount;
+	orientationSum[0] = 0;
+	orientationSum[1] = 0;
+	orientationCount = 0;
 
 	ro = calculatePIDLoop(&rollPid, getTargetAngleFromUserInput(user_ro) + roll);
 	pi = calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
@@ -257,7 +309,7 @@ void core_updateController(){
 		pwm_3 = 0;
 		pwm_4 = 0;
 
-		if (abs(rotx) + abs(roty) + abs(rotz) < 200){
+		if (abs(rotx) + abs(roty) + abs(rotz) < 100){
 			gyroOffsetSum[0] += rotx;
 			gyroOffsetSum[1] += roty;
 			gyroOffsetSum[2] += rotz;

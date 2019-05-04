@@ -100,9 +100,9 @@ void initDevices(){
 	mpu9250_setSlaveWriteMode(&mpu_device, 1, 0);
 	mpu9250_setSlaveEnabled(&mpu_device, 1, 1);
 
-	static volatile uint8_t buffer[14];
+	/*static volatile uint8_t buffer[14];
 	while(1){
 		mpu9250_getExternalSensorBytes(&mpu_device, 0, buffer, 14);
 		HAL_Delay(10);
-	}
+	}*/
 }

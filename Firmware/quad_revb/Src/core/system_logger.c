@@ -18,6 +18,7 @@ extern int16_t ax, ay, az, rotx, roty, rotz;
 extern volatile float roll, pitch;
 extern volatile float pitchAcc, rollAcc;
 extern volatile float pitchGyro, rollGyro;
+extern volatile float height;
 extern uint16_t ppm_values[8];
 extern int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 extern int16_t pi,ro;
@@ -32,7 +33,8 @@ void logger_sendAccelerometerMessage(){
 	//uint8_t msgLength = snprintf(buffer, 256, "AX: %+10d AY: %+10d AZ: %+10d ROTX: %+10d ROTY: %+10d ROTZ: %+10d\r\n", ax, ay, az, rotx, roty, rotz);
 	//uint8_t msgLength = snprintf(buffer, 256, "PITCH: %8.4f ROLL: %8.4f ACC_PITCH: %8.4f ACC_ROLL: %8.4f GYRO_PITCH: %8.4f GYRO_ROLL: %8.4f ACCX: %+5d ACCY: %+5d ACCZ: %+5d \r\n", pitch, roll, pitchAcc, rollAcc, pitchGyro, rollGyro, ax, ay, az);
 	//uint8_t msgLength = snprintf(buffer, 256, "%5.5d %5.5d %5.5d %5.5d %5.5d %5.5d %5.5d %5.5d  %4.4d %4.4d %4.4d %4.4d  %4.4d %4.4d %4.4d %4.4d\r\n", ppm_values[0], ppm_values[1], ppm_values[2], ppm_values[3], ppm_values[4], ppm_values[5], ppm_values[6], ppm_values[7], pwm_1, pwm_2, pwm_3, pwm_4, htim3.Instance->CCR4, htim3.Instance->CCR2, htim2.Instance->CCR1, htim4.Instance->CCR4 );
-	uint8_t msgLength = snprintf(buffer, 256,
+	uint8_t msgLength = snprintf(buffer, 256, "Height: %f\r\n", height);
+	/*uint8_t msgLength = snprintf(buffer, 256,
 			"%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%f,%f\r\n",
 			ax, ay, az,
 			rotx, roty, rotz,
@@ -41,7 +43,7 @@ void logger_sendAccelerometerMessage(){
 			pitch, roll,
 			pwm_1, pwm_2, pwm_3, pwm_4,
 			pi,ro,
-			pitchPid.integral_part, rollPid.integral_part);
+			pitchPid.integral_part, rollPid.integral_part);*/
 	sendMessage(buffer, msgLength);
 }
 
@@ -50,8 +52,7 @@ void SendLogEvent(const void* argument){
 }
 
 void SystemLoggerTask(const void* argument){
-	for(;;){}
-	/*uint32_t notifiedValue;
+	uint32_t notifiedValue;
 	uint8_t leadingZeroIndex;
 	xTimerStart(sendLogTimerHandle, 0);
 	for(;;){
@@ -64,7 +65,7 @@ void SystemLoggerTask(const void* argument){
 				}
 			}
 		}
-	}*/
+	}
 }
 
 void messageFinishedFromISR(){

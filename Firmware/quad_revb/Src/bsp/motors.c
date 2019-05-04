@@ -30,8 +30,8 @@ void setMotorSpeed(int16_t m1, int16_t m2, int16_t m3, int16_t m4){
 	htim3.Instance->CCR2 = CLAMP_PWM(PWM_MAX - m2);
 	htim3.Instance->CCR3 = CLAMP_PWM(PWM_MAX - m3);
 	htim3.Instance->CCR4 = CLAMP_PWM(PWM_MAX - m4);
-	htim4.Instance->CCR1 = CLAMP_PWM(PWM_MAX - m1);
-	htim4.Instance->CCR2 = CLAMP_PWM(PWM_MAX - m2);
-	htim4.Instance->CCR3 = CLAMP_PWM(PWM_MAX - m3);
-	htim4.Instance->CCR4 = CLAMP_PWM(PWM_MAX - m4);
+	htim4.Instance->CCR1 = CLAMP_PWM(m1);
+	htim4.Instance->CCR2 = CLAMP_PWM(m2);
+	htim4.Instance->CCR3 = CLAMP_PWM(m3);
+	htim4.Instance->CCR4 = CLAMP_PWM(m4);
 }

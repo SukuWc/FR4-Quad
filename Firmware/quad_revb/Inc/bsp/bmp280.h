@@ -28,6 +28,8 @@ typedef struct Bmp280Device_T{
 	float lastPressure;
 
 	int32_t t_fine;
+	uint32_t readPressure;
+	uint32_t readTemp;
 } Bmp280Device;
 extern I2C_HandleTypeDef hi2c2;
 #define I2C_HANDLE &hi2c2

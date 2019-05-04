@@ -1785,6 +1785,10 @@ void mpu9250_getMotion6(Mpu9250Device* mpu, int16_t* ax, int16_t* ay, int16_t* a
     *gy = (((int16_t)mpu->buffer[10]) << 8) | mpu->buffer[11];
     *gz = (((int16_t)mpu->buffer[12]) << 8) | mpu->buffer[13];
 }
+
+void mpu9250_getMotionAndExternalBytes(Mpu9250Device* mpu, uint8_t *buffer, uint8_t length) {
+    readBytes(mpu->interface, MPU9250_RA_ACCEL_XOUT_H, length, buffer);
+}
 /** Get 3-axis accelerometer readings.
  * These registers store the most recent accelerometer measurements.
  * Accelerometer measurements are written to these registers at the Sample Rate
