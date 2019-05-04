@@ -9,10 +9,28 @@
 #define BMP280_H_
 
 #include "main.h"
+#include "device_interface.h"
+
+typedef struct Bmp280Device_T{
+	DeviceInterface* interface;
+	uint16_t dig_T1;
+	int16_t dig_T2;
+	int16_t dig_T3;
+	uint16_t dig_P1;
+	int16_t dig_P2;
+	int16_t dig_P3;
+	int16_t dig_P4;
+	int16_t dig_P5;
+	int16_t dig_P6;
+	int16_t dig_P7;
+	int16_t dig_P8;
+	int16_t dig_P9;
+	float lastPressure;
+
+	int32_t t_fine;
+} Bmp280Device;
 extern I2C_HandleTypeDef hi2c2;
 #define I2C_HANDLE &hi2c2
-
-#define BMP280_ADDRESS   0x77
 
 #define BMP280_REG_DIG_T1    0x88
 #define BMP280_REG_DIG_T2    0x8A
@@ -37,16 +55,16 @@ extern I2C_HandleTypeDef hi2c2;
 #define BMP280_REG_PRESSUREDATA    0xF7
 #define BMP280_REG_TEMPDATA        0xFA
 
-uint16_t bmp280_bmp280Read16LE(uint8_t reg);
-uint16_t bmp280_bmp280Read16(uint8_t reg);
-int32_t bmp280_bmp280Read24(uint8_t reg);
-uint8_t bmp280_bmp280Read8(uint8_t reg);
-int16_t bmp280_bmp280ReadS16(uint8_t reg);
-int16_t bmp280_bmp280ReadS16LE(uint8_t reg);
-float bmp280_calcAltitude(float pressure);
-float bmp280_getPressure(void);
-float bmp280_getTemperature(void);
-uint8_t bmp280_init(void);
-void bmp280_writeRegister(uint8_t reg, uint8_t val);
+static uint16_t bmp280_bmp280Read16LE(Bmp280Device* bmp280, uint8_t reg);
+static uint16_t bmp280_bmp280Read16(Bmp280Device* bmp280, uint8_t reg);
+static int32_t bmp280_bmp280Read24(Bmp280Device* bmp280, uint8_t reg);
+static uint8_t bmp280_bmp280Read8(Bmp280Device* bmp280, uint8_t reg);
+static int16_t bmp280_bmp280ReadS16LE(Bmp280Device* bmp280, uint8_t reg);
+//static int16_t bmp280_bmp280ReadS16(Bmp280Device* bmp280, uint8_t reg);
+float bmp280_calcAltitude(Bmp280Device* bmp280);
+float bmp280_getPressure(Bmp280Device* bmp280);
+float bmp280_getTemperature(Bmp280Device* bmp280);
+uint8_t bmp280_init(Bmp280Device* bmp280);
+static void bmp280_writeRegister(Bmp280Device* bmp280, uint8_t reg, uint8_t val);
 
 #endif /* BMP280_H_ */

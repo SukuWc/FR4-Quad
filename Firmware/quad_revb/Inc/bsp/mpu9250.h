@@ -7,13 +7,22 @@
 typedef struct Mpu9250Device_T{
 	DeviceInterface* interface;
 	uint8_t buffer[16];
+	uint8_t currentSlave4Address;
 } Mpu9250Device;
+
+typedef struct MPU9250_I2CDeviceInterface{
+	uint8_t address;
+	Mpu9250Device* mpu;
+} MPU9250_I2CDeviceInterface;
 
 extern I2C_HandleTypeDef hi2c2;
 #define I2C_HANDLE &hi2c2
 #define I2C_ADDR 0x68
 #define delay(x) HAL_Delay(x)
 
+uint16_t mpu9250_getExternalSensorBytes(Mpu9250Device* mpu, int position, uint8_t* buffer, uint8_t length);
+void mpu9250_initDeviceInterface(MPU9250_I2CDeviceInterface* mpu_if, Mpu9250Device* mpu, uint8_t address);
+void mpu9250_initMpuDeviceInterface(DeviceInterface* dev_if, MPU9250_I2CDeviceInterface* mpu_if);
 uint8_t mpu9250_getAccelDPFL(Mpu9250Device* mpu);
 void mpu9250_getAcceleration(Mpu9250Device* mpu, int16_t* x, int16_t* y, int16_t* z);
 int16_t mpu9250_getAccelerationX(Mpu9250Device* mpu);
@@ -94,7 +103,7 @@ void mpu9250_getRotation(Mpu9250Device* mpu, int16_t* x, int16_t* y, int16_t* z)
 int16_t mpu9250_getRotationX(Mpu9250Device* mpu);
 int16_t mpu9250_getRotationY(Mpu9250Device* mpu);
 int16_t mpu9250_getRotationZ(Mpu9250Device* mpu);
-uint8_t mpu9250_getSlate4InputByte(Mpu9250Device* mpu);
+uint8_t mpu9250_getSlave4InputByte(Mpu9250Device* mpu);
 uint8_t mpu9250_getSlave0FIFOEnabled(Mpu9250Device* mpu);
 uint8_t mpu9250_getSlave0Nack(Mpu9250Device* mpu);
 uint8_t mpu9250_getSlave1FIFOEnabled(Mpu9250Device* mpu);

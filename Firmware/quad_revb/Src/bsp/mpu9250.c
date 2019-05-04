@@ -2,6 +2,57 @@
 #include "bsp/mpu9250_regs.h"
 #include "device_interface.h"
 
+void mpu9250_initDeviceInterface(MPU9250_I2CDeviceInterface* mpu_if, Mpu9250Device* mpu, uint8_t address){
+	mpu_if->address = address;
+	mpu_if->mpu = mpu;
+}
+
+static int16_t mpu_i2c_read(DeviceInterface* dev_comm_if, uint16_t address, uint8_t* buffer, uint16_t length){
+	MPU9250_I2CDeviceInterface* c_if = (MPU9250_I2CDeviceInterface*)(dev_comm_if->communication_dev_if);
+	Mpu9250Device* mpu = c_if->mpu;
+	uint8_t slaveAddress = c_if->address | (1 << 7);
+	mpu9250_setSlave4Address(mpu, slaveAddress);
+	mpu->currentSlave4Address = slaveAddress;
+	for (uint8_t i = 0; i < length; i++){
+		mpu9250_setSlave4Register(mpu, address + i);
+		mpu9250_setSlave4Enabled(mpu, 1);
+		while (mpu9250_getSlave4IsDone(mpu) != 1){}
+		buffer[i] = mpu9250_getSlave4InputByte(mpu);
+	}
+	return length;
+}
+
+static int16_t mpu_i2c_write(DeviceInterface* dev_comm_if, uint16_t address, uint8_t* buffer, uint16_t length){
+	MPU9250_I2CDeviceInterface* c_if = (MPU9250_I2CDeviceInterface*)(dev_comm_if->communication_dev_if);
+	Mpu9250Device* mpu = c_if->mpu;
+	uint8_t slaveAddress = c_if->address & ~(1 << 7);
+	if (mpu->currentSlave4Address != slaveAddress){
+		mpu9250_setSlave4Address(mpu, slaveAddress);
+		mpu->currentSlave4Address = slaveAddress;
+	}
+	for (uint8_t i = 0; i < length; i++){
+		uint8_t temp_buffer;
+		while(1){
+			mpu9250_setSlave4Register(mpu, address + i);
+			mpu9250_setSlave4OutputByte(mpu, buffer[i]);
+			mpu9250_setSlave4Enabled(mpu, 1);
+			while (mpu9250_getSlave4IsDone(mpu) != 1){}
+			mpu_i2c_read(dev_comm_if, address + i, &temp_buffer, 1);
+			if (temp_buffer == buffer[i]){
+				break;
+			}
+		}
+	}
+	return length;
+}
+
+void mpu9250_initMpuDeviceInterface(DeviceInterface* dev_if, MPU9250_I2CDeviceInterface* mpu_if){
+	dev_if->read = mpu_i2c_read;
+	dev_if->write = mpu_i2c_write;
+	dev_if->communication_dev_if = mpu_if;
+}
+
+
 /** Power on and prepare for general usage.
  * This will activate the device and take it out of sleep mode (which must be done
  * after start-up). This function also sets both the accelerometer and the gyroscope
@@ -1188,7 +1239,7 @@ void mpu9250_setSlave4MasterDelay(Mpu9250Device* mpu, uint8_t delay) {
  * @return Last available byte read from to Slave 4
  * @see MPU9250_RA_I2C_SLV4_DI
  */
-uint8_t mpu9250_getSlate4InputByte(Mpu9250Device* mpu) {
+uint8_t mpu9250_getSlave4InputByte(Mpu9250Device* mpu) {
     readByte(mpu->interface, MPU9250_RA_I2C_SLV4_DI, mpu->buffer);
     return mpu->buffer[0];
 }
@@ -1980,6 +2031,10 @@ uint16_t mpu9250_getExternalSensorWord(Mpu9250Device* mpu, int position) {
 uint32_t mpu9250_getExternalSensorDWord(Mpu9250Device* mpu, int position) {
     readBytes(mpu->interface, MPU9250_RA_EXT_SENS_DATA_00 + position, 4, mpu->buffer);
     return (((uint32_t)mpu->buffer[0]) << 24) | (((uint32_t)mpu->buffer[1]) << 16) | (((uint16_t)mpu->buffer[2]) << 8) | mpu->buffer[3];
+}
+
+uint16_t mpu9250_getExternalSensorBytes(Mpu9250Device* mpu, int position, uint8_t* buffer, uint8_t length) {
+    return readBytes(mpu->interface, MPU9250_RA_EXT_SENS_DATA_00 + position, length, buffer);
 }
 
 // MOT_DETECT_STATUS register
