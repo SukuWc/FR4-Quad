@@ -24,6 +24,11 @@ static DeviceInterface bmp_dev;
 static MPU9250_I2CDeviceInterface ak_mpu_dev;
 static DeviceInterface ak_dev;
 
+int32_t sumValue[6];
+float average[6];
+float averageAfter[6];
+float response[6];
+
 void initDevices(){
 	initSPICommunicationInterface(&spi_comm, &hspi1);
 	initSPIDeviceCommunicationInterface(&spi_dev, &spi_comm, GPIOA, GPIO_PIN_15);
@@ -37,7 +42,62 @@ void initDevices(){
 	}
 	mpu9250_initialize(&mpu_device);
 
-	mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
+	// SELF-TEST
+	writeByte(&mpu_dev, 0x1A, 2);
+	writeByte(&mpu_dev, 0x1D, 2);
+	mpu9250_setFullScaleAccelRange(&mpu_device, MPU9250_ACCEL_FS_2);
+	mpu9250_setFullScaleGyroRange(&mpu_device, MPU9250_GYRO_FS_250);
+
+	writeBits(&mpu_dev, 0x1b, 7, 3, 0x00);
+	writeBits(&mpu_dev, 0x1c, 7, 3, 0x00);
+	HAL_Delay(20);
+
+	int16_t ax, ay, az, gx, gy, gz;
+	for (int i = 0; i < 200; i++){
+		HAL_Delay(1);
+		mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &gx, &gy, &gz);
+		sumValue[3] += ax;
+		sumValue[4] += ay;
+		sumValue[5] += az;
+		sumValue[0] += gx;
+		sumValue[1] += gy;
+		sumValue[2] += gz;
+	}
+	for (int i = 0; i < 6; i++){
+		average[i] = (float)(sumValue[i]) / 200.0f;
+		sumValue[i] = 0;
+	}
+	writeBits(&mpu_dev, 0x1b, 7, 3, 0xff);
+	writeBits(&mpu_dev, 0x1c, 7, 3, 0xff);
+	HAL_Delay(20);
+	for (int i = 0; i < 200; i++){
+		HAL_Delay(1);
+		mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &gx, &gy, &gz);
+		sumValue[3] += ax;
+		sumValue[4] += ay;
+		sumValue[5] += az;
+		sumValue[0] += gx;
+		sumValue[1] += gy;
+		sumValue[2] += gz;
+	}
+	for (int i = 0; i < 6; i++){
+		averageAfter[i] = (float)(sumValue[i]) / 200.0f;
+	}
+	for (int i = 0; i < 6; i++){
+		response[i] = averageAfter[i] - average[i];
+	}
+	volatile uint8_t otp_data[6];
+	readBytes(&mpu_dev, 0, 3, &(otp_data[3]));
+	readBytes(&mpu_dev, 0x0d, 3, &(otp_data[0]));
+	volatile float ratio[6];
+	volatile float opt_reference_value[6];
+	for (int i = 0; i < 6; i++){
+		opt_reference_value[i] = (float)(2620)*(pow(1.01 ,((float)otp_data[i] - 1.0) ));
+		ratio[i] = response[i] / opt_reference_value[i];
+	}
+	HAL_Delay(1000);
+
+	/*mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
 	while(mpu9250_getClockSource(&mpu_device) != MPU9250_CLOCK_PLL_XGYRO){
 	}
 	mpu9250_setSleepEnabled(&mpu_device, 0);
@@ -55,12 +115,12 @@ void initDevices(){
 	mpu9250_setDLPFMode(&mpu_device, 3);
 	while (mpu9250_getDLPFMode(&mpu_device) != 3){
 	}
-	mpu9250_setAccelDPFL(&mpu_device, 3);
-	while (mpu9250_getAccelDPFL(&mpu_device) != 3){
+	mpu9250_setAccelDPFL(&mpu_device, 6);
+	while (mpu9250_getAccelDPFL(&mpu_device) != 6){
 	}
 	mpu9250_setAccelF_b(&mpu_device, 0);
 	while (mpu9250_getAccelF_b(&mpu_device) != 0){
-	}
+	}*/
 
 	mpu9250_setSlaveReadWriteTransitionEnabled(&mpu_device, 1);
 	mpu9250_setI2CBypassEnabled(&mpu_device, 0);
@@ -100,9 +160,9 @@ void initDevices(){
 	mpu9250_setSlaveWriteMode(&mpu_device, 1, 0);
 	mpu9250_setSlaveEnabled(&mpu_device, 1, 1);
 
-	static volatile uint8_t buffer[14];
+	/*static volatile uint8_t buffer[14];
 	while(1){
 		mpu9250_getExternalSensorBytes(&mpu_device, 0, buffer, 14);
 		HAL_Delay(10);
-	}
+	}*/
 }

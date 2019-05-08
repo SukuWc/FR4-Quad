@@ -1,4 +1,5 @@
-﻿  motors.c
-c:\prog\fr4-quad\vrep\code\quadvrep\quadvrep\motors.c(15): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+﻿  ibus_handler.c
+c:\prog\fr4-quad\vrep\code\quadvrep\quadvrep\ibus_handler.c(54): warning C4013: 'printf' undefined; assuming extern returning int
+c:\prog\fr4-quad\vrep\code\quadvrep\quadvrep\ibus_handler.c(158): warning C4098: 'joystickMain': 'void' function returning a value
   QuadVREP.vcxproj -> C:\prog\FR4-Quad\VREP\code\QuadVREP\Debug\QuadVREP.exe
   QuadVREP.vcxproj -> C:\prog\FR4-Quad\VREP\code\QuadVREP\Debug\QuadVREP.pdb (Partial PDB)

@@ -27,9 +27,9 @@ void initBsp(){
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);*/
 
+	initMotors();
 	initIbusHandler();
 	initDevices();
-	initMotors();
 
 	//mpu9250_initialize(&mpu_device);
 
