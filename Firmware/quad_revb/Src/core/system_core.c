@@ -52,13 +52,13 @@ uint8_t thrustWasInZero = 0;
 
 #define USER_INPUT_TO_THRUST 0.3f
 
-#define PID_CLAMP_MIN -32
-#define PID_CLAMP_MAX 32
+#define PID_CLAMP_MIN -128
+#define PID_CLAMP_MAX 128
 
 #ifndef __SIMULATOR__
-#define ANGLE_KP 3
-#define ANGLE_KD (0 / CONTROL_LOOP_PERIOD_MS)
-#define ANGLE_KI (0.000 * CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KP 0.7
+#define ANGLE_KD (300 / CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KI (0.01 * CONTROL_LOOP_PERIOD_MS)
 #else
 #define ANGLE_KP 2.5
 #define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
@@ -141,7 +141,7 @@ extern Bmp280Device bmp_device;
 
 void core_updatePosition(){
 	//MX_RESET_I2C();
-	inProcess = 1;
+	inProcess = 0;
 	//mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &rotx, &roty, &rotz);
 	static uint8_t motionBuffer[28];
 	mpu9250_getMotionAndExternalBytes(&mpu_device, motionBuffer, 28);
@@ -157,11 +157,11 @@ void core_updatePosition(){
     mag_x = (((int16_t)motionBuffer[16]) << 8 ) | motionBuffer[15];
     mag_y = (((int16_t)motionBuffer[18]) << 8 ) | motionBuffer[17];
     mag_z = (((int16_t)motionBuffer[20]) << 8 ) | motionBuffer[19];
-    if (magnetStatus & 1){
+    //if (magnetStatus & 1){
     	mag_x = 0;
     	mag_y = 0;
     	mag_z = 0;
-    }
+    //}
 
     if (xTaskGetTickCount() - lastPressureTick > pdMS_TO_TICKS(40)){
         pressure = (((uint32_t)motionBuffer[22]) << 24) | (((uint32_t)motionBuffer[23]) << 16) | (((uint32_t)motionBuffer[24]) << 8);
@@ -181,9 +181,9 @@ void core_updatePosition(){
 	accel_y = ay;
 	accel_z = az;
 
-	gyro_pi = roty - gyroOffsets[1];//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
-	gyro_ro = rotx - gyroOffsets[0];//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
-	gyro_ya = rotz - gyroOffsets[2];//-rotz;//-(rotz - gyroOffsets[2]);
+	gyro_pi = roty;// - gyroOffsets[1];//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
+	gyro_ro = rotx;// - gyroOffsets[0];//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
+	gyro_ya = rotz;// - gyroOffsets[2];//-rotz;//-(rotz - gyroOffsets[2]);
 
 
 	/*#define ALPHA 0.9985
@@ -214,18 +214,18 @@ void core_updatePosition(){
 	#define ACC_SENS 1.0f//317.141f //any unit works
 	#define M_RAD_TO_DEG (180.0f/M_PI)
 	#define M_DEG_TO_RAD (M_PI/180.f)
-	if (user_th == 0){
+	/*if (user_th == 0){
 		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
 		q0 = 1;
 		q1 = 0;
 		q2 = 0;
 		q3 = 0;
-	} else {
+	} else {*/
 
 		MadgwickAHRSupdate(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS, mag_x, mag_y, mag_z);
-	}
-	roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
-	pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
+	//}
+	float roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
+	float pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
 	orientationSum[0] += roll;
 	orientationSum[1] += pitch;
 	orientationCount++;
@@ -299,9 +299,9 @@ void core_updateController(){
 	orientationSum[1] = 0;
 	orientationCount = 0;
 
-	ro = calculatePIDLoop(&rollPid, getTargetAngleFromUserInput(user_ro) + roll);
-	pi = calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
-	ya = calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
+	ro = calculatePIDLoop(&rollPid, /*getTargetAngleFromUserInput(user_ro)*/ + roll);
+	pi = 0;//calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
+	ya = 0;//calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
 	th = user_th * 2 + (abs(user_ro) + abs(user_pi)) * USER_INPUT_TO_THRUST;
 	if (user_th < 5 || !motorValid || errorState || !thrustWasInZero){
 		pwm_1 = 0;
