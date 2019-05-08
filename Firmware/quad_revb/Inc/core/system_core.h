@@ -25,8 +25,9 @@ extern xTimerHandle sendLogTimerHandle;
 #define LOGGER_LOOP_PERIOD_MS 20
 
 enum SystemCoreNotificationFlags_T {
-	EVENT_CONTROLLER_UPDATE = 0,
-	EVENT_POSITION_UPDATE
+	EVENT_CORE_CONTROLLER_UPDATE = 0,
+	EVENT_CORE_POSITION_UPDATED,
+	EVENT_CORE_JOYSTICK_UPDATED
 };
 
 #define sNotifySystemCore(event) xTaskNotify(systemCoreTaskHandle, (1 << (31 - (int)event)), eSetBits)
