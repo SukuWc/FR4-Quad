@@ -98,7 +98,7 @@ void initDevices(){
 	}
 	HAL_Delay(1000);*/
 
-	/*mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
+	mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
 	while(mpu9250_getClockSource(&mpu_device) != MPU9250_CLOCK_PLL_XGYRO){
 	}
 	mpu9250_setSleepEnabled(&mpu_device, 0);
@@ -116,14 +116,14 @@ void initDevices(){
 	mpu9250_setDLPFMode(&mpu_device, 3);
 	while (mpu9250_getDLPFMode(&mpu_device) != 3){
 	}
-	mpu9250_setAccelDPFL(&mpu_device, 6);
-	while (mpu9250_getAccelDPFL(&mpu_device) != 6){
+	mpu9250_setAccelDPFL(&mpu_device, 3);
+	while (mpu9250_getAccelDPFL(&mpu_device) != 3){
 	}
 	mpu9250_setAccelF_b(&mpu_device, 0);
 	while (mpu9250_getAccelF_b(&mpu_device) != 0){
-	}*/
+	}
 
-	mpu9250_setSlaveReadWriteTransitionEnabled(&mpu_device, 1);
+	/*mpu9250_setSlaveReadWriteTransitionEnabled(&mpu_device, 1);
 	mpu9250_setI2CBypassEnabled(&mpu_device, 0);
 	mpu9250_setWaitForExternalSensorEnabled(&mpu_device, 1);
 	mpu9250_setI2CMasterModeEnabled(&mpu_device, 1);
@@ -159,7 +159,7 @@ void initDevices(){
 	mpu9250_setSlaveRegister(&mpu_device, 1, 0xf7);
 	mpu9250_setSlaveDataLength(&mpu_device, 1, 6);
 	mpu9250_setSlaveWriteMode(&mpu_device, 1, 0);
-	mpu9250_setSlaveEnabled(&mpu_device, 1, 1);
+	mpu9250_setSlaveEnabled(&mpu_device, 1, 1);*/
 
 	/*static volatile uint8_t buffer[14];
 	while(1){

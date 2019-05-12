@@ -42,9 +42,9 @@ int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 
 #define MEASUREMENT_LENGTH 1368
-volatile int16_t measureMagX[MEASUREMENT_LENGTH];
-volatile int16_t measureMagY[MEASUREMENT_LENGTH];
-volatile int16_t measureMagZ[MEASUREMENT_LENGTH];
+volatile int16_t accX[MEASUREMENT_LENGTH];
+volatile int16_t accY[MEASUREMENT_LENGTH];
+volatile int16_t accZ[MEASUREMENT_LENGTH];
 uint16_t measurementIndex = 0;
 
 
@@ -63,17 +63,17 @@ uint8_t thrustWasInZero = 0;
 #define PID_CLAMP_MAX 128
 
 #ifndef __SIMULATOR__
-#define ANGLE_KP 0.7
+#define ANGLE_KP 2.5f
 #define ANGLE_KD (300 / CONTROL_LOOP_PERIOD_MS)
-#define ANGLE_KI (0.01 * CONTROL_LOOP_PERIOD_MS)
+#define ANGLE_KI (0.00 * CONTROL_LOOP_PERIOD_MS)
 #else
 #define ANGLE_KP 2.5
 #define ANGLE_KD (640 / CONTROL_LOOP_PERIOD_MS)
 #define ANGLE_KI (0.0 * CONTROL_LOOP_PERIOD_MS)
 #endif
 
-#define YAWSPEED_KP 5.0
-#define YAWSPEED_KD (60.0 / CONTROL_LOOP_PERIOD_MS)
+#define YAWSPEED_KP 2.0f
+#define YAWSPEED_KD (0 / CONTROL_LOOP_PERIOD_MS)
 #define YAWSPEED_KI (0.000 * CONTROL_LOOP_PERIOD_MS)
 
 PIDStruct rollPid;
@@ -159,8 +159,18 @@ void core_updatePosition(){
     roty = (((int16_t)motionBuffer[10]) << 8) | motionBuffer[11];
     rotz = (((int16_t)motionBuffer[12]) << 8) | motionBuffer[13];
 
+    if (channel_values[4] < 1250){
+		accX[measurementIndex] = ax;
+		accY[measurementIndex] = ay;
+		accZ[measurementIndex] = az;
+		measurementIndex++;
+		if (measurementIndex == MEASUREMENT_LENGTH){
+			measurementIndex = 0;
+		}
+	}
+
     uint8_t magnetStatus = motionBuffer[14];
-    if (magnetStatus & 1){
+    /*if (magnetStatus & 1){
         mag_x = (((int16_t)motionBuffer[16]) << 8 ) | motionBuffer[15];
         mag_y = (((int16_t)motionBuffer[18]) << 8 ) | motionBuffer[17];
         mag_z = (((int16_t)motionBuffer[20]) << 8 ) | motionBuffer[19];
@@ -174,9 +184,9 @@ void core_updatePosition(){
 				measurementIndex = 0;
 			}
         }
-    }
+    }*/
 
-    if (xTaskGetTickCount() - lastPressureTick > pdMS_TO_TICKS(40)){
+    /*if (xTaskGetTickCount() - lastPressureTick > pdMS_TO_TICKS(40)){
         pressure = (((uint32_t)motionBuffer[22]) << 24) | (((uint32_t)motionBuffer[23]) << 16) | (((uint32_t)motionBuffer[24]) << 8);
         pressure >>= 8;
 
@@ -187,7 +197,7 @@ void core_updatePosition(){
         bmp_device.readTemp = temperature;
 
         height = bmp280_calcAltitude(&bmp_device);
-    }
+    }*/
 
 
 	accel_x = ax;
@@ -234,8 +244,8 @@ void core_updatePosition(){
 		q2 = 0;
 		q3 = 0;
 	} else {*/
-
-		MadgwickAHRSupdate(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS, mag_x, mag_y, mag_z);
+		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
+		//MadgwickAHRSupdate(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS, mag_x, mag_y, mag_z);
 	//}
 	float roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
 	float pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
@@ -312,10 +322,10 @@ void core_updateController(){
 	orientationSum[1] = 0;
 	orientationCount = 0;
 
-	ro = calculatePIDLoop(&rollPid, /*getTargetAngleFromUserInput(user_ro)*/ + roll);
-	pi = 0;//calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
-	ya = 0;//calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
-	th = user_th * 2 ;//+ (abs(user_ro) + abs(user_pi)) * USER_INPUT_TO_THRUST;
+	ro = calculatePIDLoop(&rollPid, getTargetAngleFromUserInput(user_ro) + roll);
+	pi = calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
+	ya = calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
+	th = user_th * 2 + (abs(user_ro) + abs(user_pi)) * USER_INPUT_TO_THRUST;
 	if (user_th < 5 || !motorValid || errorState || !thrustWasInZero){
 		pwm_1 = 0;
 		pwm_2 = 0;
@@ -336,10 +346,10 @@ void core_updateController(){
 			}
 		}
 	} else {
-		pwm_4 = th;// - ro - pi + ya;
-		pwm_3 = th;// - ro + pi - ya;
-		pwm_1 = th;// + ro + pi + ya;
-		pwm_2 = th;// + ro - pi - ya;
+		pwm_4 = th - ro - pi + ya;
+		pwm_3 = th - ro + pi - ya;
+		pwm_1 = th + ro + pi + ya;
+		pwm_2 = th + ro - pi - ya;
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
 #ifdef __SIMULATOR__
