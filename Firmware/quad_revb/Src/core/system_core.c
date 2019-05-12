@@ -41,6 +41,13 @@ int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 
+#define MEASUREMENT_LENGTH 1368
+volatile int16_t measureMagX[MEASUREMENT_LENGTH];
+volatile int16_t measureMagY[MEASUREMENT_LENGTH];
+volatile int16_t measureMagZ[MEASUREMENT_LENGTH];
+uint16_t measurementIndex = 0;
+
+
 /*#define AVG_LENGTH 1
 int16_t avg[3][AVG_LENGTH] = {0};
 uint16_t avgIndex[3] = {0};
@@ -91,7 +98,7 @@ void ControlEvent(const void* argument){
 		errorState = 1;
 		while(1){}
 	}
-	sNotifySystemCore(EVENT_CONTROLLER_UPDATE);
+	sNotifySystemCore(EVENT_CORE_CONTROLLER_UPDATE);
 }
 
 void PositionUpdateEvent(const void* argument){
@@ -99,7 +106,7 @@ void PositionUpdateEvent(const void* argument){
 		errorState = 1;
 		while(1){}
 	}
-	sNotifySystemCore(EVENT_POSITION_UPDATE);
+	sNotifySystemCore(EVENT_CORE_POSITION_UPDATED);
 }
 
 /*int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
@@ -140,7 +147,6 @@ extern Mpu9250Device mpu_device;
 extern Bmp280Device bmp_device;
 
 void core_updatePosition(){
-	//MX_RESET_I2C();
 	inProcess = 0;
 	//mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &rotx, &roty, &rotz);
 	static uint8_t motionBuffer[28];
@@ -154,14 +160,21 @@ void core_updatePosition(){
     rotz = (((int16_t)motionBuffer[12]) << 8) | motionBuffer[13];
 
     uint8_t magnetStatus = motionBuffer[14];
-    mag_x = (((int16_t)motionBuffer[16]) << 8 ) | motionBuffer[15];
-    mag_y = (((int16_t)motionBuffer[18]) << 8 ) | motionBuffer[17];
-    mag_z = (((int16_t)motionBuffer[20]) << 8 ) | motionBuffer[19];
-    //if (magnetStatus & 1){
-    	mag_x = 0;
-    	mag_y = 0;
-    	mag_z = 0;
-    //}
+    if (magnetStatus & 1){
+        mag_x = (((int16_t)motionBuffer[16]) << 8 ) | motionBuffer[15];
+        mag_y = (((int16_t)motionBuffer[18]) << 8 ) | motionBuffer[17];
+        mag_z = (((int16_t)motionBuffer[20]) << 8 ) | motionBuffer[19];
+
+        if (channel_values[4] < 1250){
+			measureMagX[measurementIndex] = mag_x;
+			measureMagY[measurementIndex] = mag_y;
+			measureMagZ[measurementIndex] = mag_z;
+			measurementIndex++;
+			if (measurementIndex == MEASUREMENT_LENGTH){
+				measurementIndex = 0;
+			}
+        }
+    }
 
     if (xTaskGetTickCount() - lastPressureTick > pdMS_TO_TICKS(40)){
         pressure = (((uint32_t)motionBuffer[22]) << 24) | (((uint32_t)motionBuffer[23]) << 16) | (((uint32_t)motionBuffer[24]) << 8);
@@ -302,7 +315,7 @@ void core_updateController(){
 	ro = calculatePIDLoop(&rollPid, /*getTargetAngleFromUserInput(user_ro)*/ + roll);
 	pi = 0;//calculatePIDLoop(&pitchPid, getTargetAngleFromUserInput(user_pi) + pitch);
 	ya = 0;//calculatePIDLoop(&yawPid, getTargetYawSpeedFromUserInput(user_ya) + yawSpeed);
-	th = user_th * 2 + (abs(user_ro) + abs(user_pi)) * USER_INPUT_TO_THRUST;
+	th = user_th * 2 ;//+ (abs(user_ro) + abs(user_pi)) * USER_INPUT_TO_THRUST;
 	if (user_th < 5 || !motorValid || errorState || !thrustWasInZero){
 		pwm_1 = 0;
 		pwm_2 = 0;
@@ -323,10 +336,10 @@ void core_updateController(){
 			}
 		}
 	} else {
-		pwm_4 = th - ro - pi + ya;
-		pwm_3 = th - ro + pi - ya;
-		pwm_1 = th + ro + pi + ya;
-		pwm_2 = th + ro - pi - ya;
+		pwm_4 = th;// - ro - pi + ya;
+		pwm_3 = th;// - ro + pi - ya;
+		pwm_1 = th;// + ro + pi + ya;
+		pwm_2 = th;// + ro - pi - ya;
 	}
 	setMotorSpeed(pwm_1, pwm_2, pwm_3, pwm_4);
 #ifdef __SIMULATOR__
@@ -347,8 +360,8 @@ void SystemCoreTask(void const * argument){
 			while ((leadingZeroIndex = __CLZ(notifiedValue)) != 32){
 				notifiedValue &= UINT32_MAX >> (leadingZeroIndex + 1);
 				switch(leadingZeroIndex){
-					case EVENT_CONTROLLER_UPDATE: core_updateController(); break;
-					case EVENT_POSITION_UPDATE: core_updatePosition(); break;
+					case EVENT_CORE_CONTROLLER_UPDATE: core_updateController(); break;
+					case EVENT_CORE_POSITION_UPDATED: core_updatePosition(); break;
 				}
 			}
 		}

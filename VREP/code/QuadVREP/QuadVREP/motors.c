@@ -16,9 +16,11 @@ float getAirVelocityValue(uint16_t pwm) {
 }
 
 void setMotorSpeed(uint16_t pwm1, uint16_t pwm2, uint16_t pwm3, uint16_t pwm4) {
-
-	snprintf(buffer, 256, "%f \n %f \n %f \n %f", getAirVelocityValue(pwm4), getAirVelocityValue(pwm3), getAirVelocityValue(pwm1), getAirVelocityValue(pwm2)); //using /n, because /0 will short-circuit, and only the first value will be printed
-	//snprintf(buffer, 256, "%f \n %f \n %f \n %f", 5.8f, 5.8f, 5.8f, 5.8f);
+	float v1 = getAirVelocityValue(pwm4);
+	float v2 = getAirVelocityValue(pwm3);
+	float v3 = getAirVelocityValue(pwm1);
+	float v4 = getAirVelocityValue(pwm2);
+	snprintf(buffer, 256, "%f \n %f \n %f \n %f", v1, v2, v3, v4); //using /n, because /0 will short-circuit, and only print the first value
 	int foundCounter = 0;
 	for (int i = 0; i < 256; i++) {
 		if (buffer[i] == '\n') {

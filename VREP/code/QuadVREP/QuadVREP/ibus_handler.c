@@ -73,7 +73,6 @@ void joystickMain(void const * params) {
 						{
 						case LIBENJOY_EV_AXIS:
 							//printf("%u: axis %d val %d\n", ev.joy_id, ev.part_id, ev.data);
-							/*
 							if (ev.part_id == 5) {
 								double normalized = (((ev.data) - INT16_MIN) / 65536.0) * 1000.0f;
 								channel_values[THRUST_CHANNEL] = (uint16_t)(normalized) + 1000;
@@ -92,8 +91,8 @@ void joystickMain(void const * params) {
 							}
 							if (ev.part_id == 2) {
 								channel_values[ROLL_CHANNEL] = getAngleSignal(ev.data);
-							}*/
-							if (ev.part_id == 2) {
+							}
+							/*if (ev.part_id == 2) {
 								double normalized = (((ev.data) - INT16_MIN) / 65536.0) * 1000.0f;
 								channel_values[THRUST_CHANNEL] = (uint16_t)(normalized)+1000;
 							}
@@ -111,7 +110,7 @@ void joystickMain(void const * params) {
 							}
 							if (ev.part_id == 0) {
 								channel_values[ROLL_CHANNEL] = getAngleSignal(ev.data);
-							}
+							}*/
 							break;
 						case LIBENJOY_EV_BUTTON:
 							printf("%u: button %d val %d\n", ev.joy_id, ev.part_id, ev.data);

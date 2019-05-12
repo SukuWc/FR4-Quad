@@ -7,12 +7,15 @@
 
 #ifndef COMMUNICATION_INTERFACE_H_
 #define COMMUNICATION_INTERFACE_H_
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "main.h"
 
 typedef struct I2CCommunicationInterface_T{
 	I2C_HandleTypeDef* hi2c;
 	uint8_t inBlockingMode;
-	//SemaphoreHandle_t* blockingMutex;
+	SemaphoreHandle_t* blockingMutex;
+	SemaphoreHandle_t* transactionFinishedMutex;
 	uint8_t buffer[32];
 } I2CCommunicationInterface;
 

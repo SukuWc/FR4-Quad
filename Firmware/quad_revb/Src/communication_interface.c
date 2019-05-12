@@ -5,6 +5,8 @@
  *      Author: danim
  */
 #include "main.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "i2c.h"
 #include "spi.h"
 #include "communication_interface.h"
@@ -12,12 +14,22 @@
  int16_t i2c_comm_transfer (I2CCommunicationInterface* c_if, uint8_t address, uint8_t* buffer, uint16_t length){
 	if (c_if->inBlockingMode){
 		HAL_I2C_Master_Transmit(c_if->hi2c, address << 1, buffer, length, HAL_MAX_DELAY);
+	} else {
+		xSemaphoreTake(c_if->blockingMutex, portMAX_DELAY);
+		HAL_I2C_Master_Transmit_DMA(c_if->hi2c, address << 1, buffer, length);
+		xSemaphoreTake(c_if->transactionFinishedMutex, portMAX_DELAY);
+		xSemaphoreGive(c_if->blockingMutex);
 	}
 	return length;
 }
  int16_t i2c_comm_receive (I2CCommunicationInterface* c_if, uint8_t address, uint8_t* buffer, uint16_t length){
 	if (c_if->inBlockingMode){
 		HAL_I2C_Master_Receive(c_if->hi2c, address << 1, buffer, length, HAL_MAX_DELAY);
+	} else {
+		xSemaphoreTake(c_if->blockingMutex, portMAX_DELAY);
+		HAL_I2C_Master_Receive_DMA(c_if->hi2c, address << 1, buffer, length);
+		xSemaphoreTake(c_if->transactionFinishedMutex, portMAX_DELAY);
+		xSemaphoreGive(c_if->blockingMutex);
 	}
 	return length;
 }

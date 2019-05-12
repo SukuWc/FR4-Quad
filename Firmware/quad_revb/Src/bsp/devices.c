@@ -41,9 +41,10 @@ void initDevices(){
 
 	}
 	mpu9250_initialize(&mpu_device);
-
+	writeBits(&mpu_dev, 0x1b, 7, 3, 0x00);
+	writeBits(&mpu_dev, 0x1c, 7, 3, 0x00);
 	// SELF-TEST
-	writeByte(&mpu_dev, 0x1A, 2);
+	/*writeByte(&mpu_dev, 0x1A, 2);
 	writeByte(&mpu_dev, 0x1D, 2);
 	mpu9250_setFullScaleAccelRange(&mpu_device, MPU9250_ACCEL_FS_2);
 	mpu9250_setFullScaleGyroRange(&mpu_device, MPU9250_GYRO_FS_250);
@@ -95,7 +96,7 @@ void initDevices(){
 		opt_reference_value[i] = (float)(2620)*(pow(1.01 ,((float)otp_data[i] - 1.0) ));
 		ratio[i] = response[i] / opt_reference_value[i];
 	}
-	HAL_Delay(1000);
+	HAL_Delay(1000);*/
 
 	/*mpu9250_setClockSource(&mpu_device, MPU9250_CLOCK_PLL_XGYRO);
 	while(mpu9250_getClockSource(&mpu_device) != MPU9250_CLOCK_PLL_XGYRO){
