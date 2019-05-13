@@ -6,6 +6,7 @@
  */
 #include "limits.h"
 #include "core/system_core.h"
+#include "core/system_position.h"
 #include "bsp/motors.h"
 #include "math.h"
 #ifndef __SIMULATOR__
@@ -23,29 +24,12 @@
 int16_t ax, ay, az, rotx, roty, rotz;
 
 uint32_t lastMotorValid = 0;
-volatile float pitch = 0;
-volatile float roll = 0;
-volatile float yawn = 0;
-volatile float yawSpeed = 0;
-volatile float pitchGyro = 0;
-volatile float rollGyro = 0;
-volatile float pitchAcc = 0;
-volatile float rollAcc = 0;
-volatile float height = 0;
 
-uint32_t lastPressureTick = 0;
 
-int16_t accel_x, accel_y, accel_z, gyro_ro, gyro_pi, gyro_ya, mag_x, mag_y, mag_z;
-uint32_t pressure, temperature;
+
 int16_t user_ro, user_pi, user_ya;
 int16_t user_th;
 int32_t pwm_1, pwm_2, pwm_3, pwm_4;
-
-#define MEASUREMENT_LENGTH 1368
-volatile int16_t accX[MEASUREMENT_LENGTH];
-volatile int16_t accY[MEASUREMENT_LENGTH];
-volatile int16_t accZ[MEASUREMENT_LENGTH];
-uint16_t measurementIndex = 0;
 
 
 /*#define AVG_LENGTH 1
@@ -101,14 +85,6 @@ void ControlEvent(const void* argument){
 	sNotifySystemCore(EVENT_CORE_CONTROLLER_UPDATE);
 }
 
-void PositionUpdateEvent(const void* argument){
-	if (inProcess){
-		errorState = 1;
-		while(1){}
-	}
-	sNotifySystemCore(EVENT_CORE_POSITION_UPDATED);
-}
-
 /*int16_t getAverage(int16_t *buffer, uint16_t* index, int32_t* sum, int16_t inValue){
 	*sum -= buffer[*index];
 	*sum += inValue;
@@ -142,129 +118,9 @@ float getTargetYawSpeedFromUserInput(int16_t user){
 	return input * USER_YAW_MAX;
 }
 
-#ifndef __SIMULATOR__
-extern Mpu9250Device mpu_device;
-extern Bmp280Device bmp_device;
-
-void core_updatePosition(){
-	inProcess = 0;
-	//mpu9250_getMotion6(&mpu_device, &ax, &ay, &az, &rotx, &roty, &rotz);
-	static uint8_t motionBuffer[28];
-	mpu9250_getMotionAndExternalBytes(&mpu_device, motionBuffer, 28);
-
-    ax = (((int16_t)motionBuffer[0]) << 8) | motionBuffer[1];
-    ay = (((int16_t)motionBuffer[2]) << 8) | motionBuffer[3];
-    az = (((int16_t)motionBuffer[4]) << 8) | motionBuffer[5];
-    rotx = (((int16_t)motionBuffer[8]) << 8) | motionBuffer[9];
-    roty = (((int16_t)motionBuffer[10]) << 8) | motionBuffer[11];
-    rotz = (((int16_t)motionBuffer[12]) << 8) | motionBuffer[13];
-
-    if (channel_values[4] < 1250){
-		accX[measurementIndex] = ax;
-		accY[measurementIndex] = ay;
-		accZ[measurementIndex] = az;
-		measurementIndex++;
-		if (measurementIndex == MEASUREMENT_LENGTH){
-			measurementIndex = 0;
-		}
-	}
-
-    uint8_t magnetStatus = motionBuffer[14];
-    /*if (magnetStatus & 1){
-        mag_x = (((int16_t)motionBuffer[16]) << 8 ) | motionBuffer[15];
-        mag_y = (((int16_t)motionBuffer[18]) << 8 ) | motionBuffer[17];
-        mag_z = (((int16_t)motionBuffer[20]) << 8 ) | motionBuffer[19];
-
-        if (channel_values[4] < 1250){
-			measureMagX[measurementIndex] = mag_x;
-			measureMagY[measurementIndex] = mag_y;
-			measureMagZ[measurementIndex] = mag_z;
-			measurementIndex++;
-			if (measurementIndex == MEASUREMENT_LENGTH){
-				measurementIndex = 0;
-			}
-        }
-    }*/
-
-    /*if (xTaskGetTickCount() - lastPressureTick > pdMS_TO_TICKS(40)){
-        pressure = (((uint32_t)motionBuffer[22]) << 24) | (((uint32_t)motionBuffer[23]) << 16) | (((uint32_t)motionBuffer[24]) << 8);
-        pressure >>= 8;
-
-        temperature = (((uint32_t)motionBuffer[25]) << 24) | (((uint32_t)motionBuffer[26]) << 16) | (((uint32_t)motionBuffer[27]) << 8);
-        temperature >>= 8;
-
-        bmp_device.readPressure = pressure;
-        bmp_device.readTemp = temperature;
-
-        height = bmp280_calcAltitude(&bmp_device);
-    }*/
 
 
-	accel_x = ax;
-	accel_y = ay;
-	accel_z = az;
 
-	gyro_pi = roty;// - gyroOffsets[1];//(roty - gyroOffsets[1]);//getAverage(gyroPitchAvg, &gyroPitchAvgIndex, &gyroPitchSum, roty);
-	gyro_ro = rotx;// - gyroOffsets[0];//-rotx;//-(rotx - gyroOffsets[0]);//getAverage(gyroRollAvg, &gyroRollAvgIndex, &gyroRollSum, rotx);
-	gyro_ya = rotz;// - gyroOffsets[2];//-rotz;//-(rotz - gyroOffsets[2]);
-
-
-	/*#define ALPHA 0.9985
-	#define dt 0.002
-
-	pitchGyro = (float)(gyro_pi) / GYRO_SENS * dt;
-	pitch += pitchGyro;
-	rollGyro = (gyro_ro/ GYRO_SENS * dt);
-	roll += rollGyro;
-	float yawSpeed = gyro_ya / GYRO_SENS;
-	yawn += yawSpeed * dt;
-
-	int forceMagnitudeApprox = abs(accel_x) + abs(accel_y) + abs(accel_z);
-	if (forceMagnitudeApprox > 1024 && forceMagnitudeApprox < 4096){
-		if (abs(accel_x) < abs(accel_z)){
-			pitchAcc = atan2f((float)accel_x, (float)accel_z) * 180 / M_PI;
-			pitch = pitch * ALPHA + pitchAcc * (1 - ALPHA);
-		}
-
-		if (abs(accel_y < abs(accel_z))){
-			rollAcc = atan2f((float)accel_y, (float)accel_z) * 180 / M_PI;
-			roll = roll * ALPHA + rollAcc * (1 - ALPHA);
-		}
-	}*/
-
-
-	#define GYRO_SENS 16.384f
-	#define ACC_SENS 1.0f//317.141f //any unit works
-	#define M_RAD_TO_DEG (180.0f/M_PI)
-	#define M_DEG_TO_RAD (M_PI/180.f)
-	/*if (user_th == 0){
-		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
-		q0 = 1;
-		q1 = 0;
-		q2 = 0;
-		q3 = 0;
-	} else {*/
-		MadgwickAHRSupdateIMU(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS);
-		//MadgwickAHRSupdate(gyro_ro/GYRO_SENS * M_DEG_TO_RAD, gyro_pi/GYRO_SENS * M_DEG_TO_RAD, gyro_ya/GYRO_SENS * M_DEG_TO_RAD, accel_x/ACC_SENS, accel_y/ACC_SENS, accel_z/ACC_SENS, mag_x, mag_y, mag_z);
-	//}
-	float roll = -atan2f(2*(q0*q1 + q2*q3), 1-2*(q1*q1 + q2*q2)) * M_RAD_TO_DEG;
-	float pitch = asin(2*(q0*q2-q3*q1)) * M_RAD_TO_DEG;
-	orientationSum[0] += roll;
-	orientationSum[1] += pitch;
-	orientationCount++;
-	yawSpeed = -gyro_ya / GYRO_SENS;
-	inProcess = 0;
-}
-#else
-extern float simulatorRollAngle, simulatorPitchAngle, simulatorYawAngle;
-static float oldYawnAngle = 0;
-void core_updatePosition() {
-	roll = simulatorRollAngle;
-	pitch = -simulatorPitchAngle;
-	yawSpeed = (simulatorYawAngle - oldYawnAngle) / 0.01f;
-	oldYawnAngle = simulatorYawAngle;
-}
-#endif
 
 void core_updateController(){
 	if (receiverValid()){

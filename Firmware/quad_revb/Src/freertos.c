@@ -80,9 +80,11 @@
 /* USER CODE END Variables */
 osThreadId systemLoggerTaskHandle;
 osThreadId systemCoreTaskHandle;
+osThreadId systemPositionHandle;
 osTimerId controlTimerHandle;
 osTimerId positionUpdateTimerHandle;
 osTimerId sendLogTimerHandle;
+osMutexId positionDataMutexHandle;
 osSemaphoreId loggerLockHandle;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,6 +94,7 @@ osSemaphoreId loggerLockHandle;
 
 void SystemLoggerTask(void const * argument);
 extern void SystemCoreTask(void const * argument);
+extern void SystemPosition(void const * argument);
 extern void ControlEvent(void const * argument);
 extern void PositionUpdateEvent(void const * argument);
 extern void SendLogEvent(void const * argument);
@@ -128,6 +131,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
        
   /* USER CODE END Init */
+
+  /* Create the mutex(es) */
+  /* definition and creation of positionDataMutex */
+  osMutexDef(positionDataMutex);
+  positionDataMutexHandle = osMutexCreate(osMutex(positionDataMutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -167,6 +175,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of systemCoreTask */
   osThreadDef(systemCoreTask, SystemCoreTask, osPriorityRealtime, 0, 128);
   systemCoreTaskHandle = osThreadCreate(osThread(systemCoreTask), NULL);
+
+  /* definition and creation of systemPosition */
+  osThreadDef(systemPosition, SystemPosition, osPriorityRealtime, 0, 128);
+  systemPositionHandle = osThreadCreate(osThread(systemPosition), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
