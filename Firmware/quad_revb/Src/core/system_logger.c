@@ -22,7 +22,7 @@ extern volatile float height;
 extern uint16_t ppm_values[8];
 extern int32_t pwm_1, pwm_2, pwm_3, pwm_4;
 extern int16_t pi,ro;
-extern PIDStruct rollPid, pitchPid;
+extern PIDStruct rollGyroPid, pitchGyroPid;
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
