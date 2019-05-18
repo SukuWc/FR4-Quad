@@ -1,0 +1,22 @@
+Category,Quantity,References,Value,Stock Code,Unit Cost
+Capacitors,1,C1,4.7nF,,$0.02
+Capacitors,2,C2-C3,4.7uF,,$0.02
+Capacitors,6,"C7,C16,C18,C20,C22,C24",100nF,,$0.02
+Capacitors,6,"C12,C15,C17,C19,C21,C23",10uF,,$0.02
+Resistors,11,"R1-R2,R4,R8-R10,R15,R22,R25,R28,R31",10k,,$0.02
+Resistors,1,R3,1M,,$0.02
+Resistors,7,"R5,R7,R11,R13-R14,R18,R34",1k,,$0.02
+Resistors,1,R6,2k,,$0.02
+Resistors,4,"R12,R19-R21",0.1R Sense,,$0.10
+Integrated Circuits,1,U2,MCP73831,MCP73831T-2ACI/OT,$0.40
+Integrated Circuits,1,U5,USB-MICRO,MX-105017-0001,$0.50
+Transistors,4,Q1-Q4,IRF7324,,$0.30
+Diodes,7,"D1,D3-D4,D6-D7,D10,D14",LED,,$0.04
+Diodes,4,"D2,D5,D8,D11",DIODE,,$0.10
+Diodes,1,D9,MBR0530T3G,,$0.10
+Miscellaneous,2,J1-J2,J 1X2,,$0.10
+Miscellaneous,2,J4-J5,J 2X10,,$0.25
+Miscellaneous,1,L2,BEAD,,$0.04
+Miscellaneous,4,M1-M4,MOTOR,,$1.10
+Miscellaneous,1,S1,S DPDT,CANAL ELECTRONIC SS008B-02P-22,$0.30
+Miscellaneous,4,SJ1-SJ4,SOLDER_JUMPER_2,,$0.00

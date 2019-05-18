@@ -1,0 +1,11 @@
+Category,Quantity,References,Value,Stock Code,Unit Cost
+Capacitors,3,"C2-C3,C18",100n,,$0.02
+Capacitors,1,C8,100nF,,$0.02
+Capacitors,1,C9,1uF,,$0.02
+Integrated Circuits,1,U3,NCV8161,NCV8161,$0.20
+Integrated Circuits,1,U7,BMP280,BMP280,$0.75
+Integrated Circuits,1,U8,MPU-9250,MPU-9250,$1.25
+Miscellaneous,2,J1-J2,J 2X10,,$0.25
+Miscellaneous,8,SJ1-SJ8,SOLDER_JUMPER_2,,$0.00
+Miscellaneous,1,TP2,SDA,,$0.00
+Miscellaneous,1,TP3,SCL,,$0.00

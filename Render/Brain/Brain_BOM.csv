@@ -1,0 +1,20 @@
+Category,Quantity,References,Value,Stock Code,Unit Cost
+Capacitors,1,C1,4.7nF,,$0.02
+Capacitors,1,C2,10uF,,$0.02
+Capacitors,4,"C3-C5,C7",100nF,,$0.02
+Capacitors,2,"C6,C8",1uF,,$0.02
+Capacitors,2,C9-C10,22pF,,$0.02
+Resistors,2,"R1,R6",1M,,$0.02
+Resistors,1,R2,10k,,$0.02
+Resistors,2,R3-R4,22R,,$0.02
+Resistors,1,R5,4.7k,,$0.02
+Integrated Circuits,1,U1,STM32F103C8T6,,$3.20
+Integrated Circuits,1,U2,NCV8161,NCV8161,$0.20
+Integrated Circuits,1,U3,USB-MICRO,MX-105017-0001,$0.50
+Integrated Circuits,1,U4,USBLC6-2,USBLC6-2SC6,$0.15
+Diodes,1,D1,MBR0530T3G,,$0.05
+Miscellaneous,2,J1-J2,J 2X10,,$0.25
+Miscellaneous,1,J3,J 1X4,,$0.15
+Miscellaneous,1,L1,1u,,$0.02
+Miscellaneous,1,TP1,PPM,,$0.00
+Miscellaneous,1,X1,8MHz,,$0.35
