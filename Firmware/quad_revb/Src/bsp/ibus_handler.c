@@ -6,6 +6,7 @@
  */
 
 #include "usart.h"
+#include "core/system_core.h"
 
 enum IbusHandlerState{
 	IBUS_INITIALIZING, IBUS_RECEIVING, IBUS_ERROR
@@ -30,6 +31,9 @@ void onUartReceiveFinished(){
 		}
 		state = IBUS_RECEIVING;
 		buffer[0] = 0;
+		BaseType_t xTaskWokenByReceive = pdFALSE;
+		sNotifySystemCoreFromISR(EVENT_CORE_JOYSTICK_UPDATED, &xTaskWokenByReceive);
+		portEND_SWITCHING_ISR(xTaskWokenByReceive)
 	} else {
 		state = IBUS_INITIALIZING;
 	}

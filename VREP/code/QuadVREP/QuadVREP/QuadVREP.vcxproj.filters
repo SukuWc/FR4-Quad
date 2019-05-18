@@ -141,14 +141,17 @@
     <ClCompile Include="CPU_instr.c">
       <Filter>Source Files\bsp</Filter>
     </ClCompile>
-    <ClCompile Include="ibus_handler.c">
-      <Filter>Source Files\bsp</Filter>
-    </ClCompile>
     <ClCompile Include="libenjoy\libenjoy.c">
       <Filter>Enjoy Source</Filter>
     </ClCompile>
     <ClCompile Include="libenjoy\libenjoy_win32.c">
       <Filter>Enjoy Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\system_position.c">
+      <Filter>Quad Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="joystick_handler.c">
+      <Filter>Source Files\bsp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -140,8 +140,9 @@
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\kalman\MadgwickAHRS.c" />
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\pid.c" />
     <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\system_core.c" />
+    <ClCompile Include="..\..\..\..\Firmware\quad_revb\Src\core\system_position.c" />
     <ClCompile Include="CPU_instr.c" />
-    <ClCompile Include="ibus_handler.c" />
+    <ClCompile Include="joystick_handler.c" />
     <ClCompile Include="libenjoy\libenjoy.c" />
     <ClCompile Include="libenjoy\libenjoy_win32.c" />
     <ClCompile Include="main.c" />

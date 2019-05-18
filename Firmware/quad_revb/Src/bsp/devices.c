@@ -41,8 +41,8 @@ void initDevices(){
 
 	}
 	mpu9250_initialize(&mpu_device);
-	writeBits(&mpu_dev, 0x1b, 7, 3, 0x00);
-	writeBits(&mpu_dev, 0x1c, 7, 3, 0x00);
+	/*writeBits(&mpu_dev, 0x1b, 7, 3, 0x00);
+	writeBits(&mpu_dev, 0x1c, 7, 3, 0x00);*/
 	// SELF-TEST
 	/*writeByte(&mpu_dev, 0x1A, 2);
 	writeByte(&mpu_dev, 0x1D, 2);

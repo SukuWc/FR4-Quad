@@ -57,16 +57,10 @@ extern I2C_HandleTypeDef hi2c2;
 #define BMP280_REG_PRESSUREDATA    0xF7
 #define BMP280_REG_TEMPDATA        0xFA
 
-static uint16_t bmp280_bmp280Read16LE(Bmp280Device* bmp280, uint8_t reg);
-static uint16_t bmp280_bmp280Read16(Bmp280Device* bmp280, uint8_t reg);
-static int32_t bmp280_bmp280Read24(Bmp280Device* bmp280, uint8_t reg);
-static uint8_t bmp280_bmp280Read8(Bmp280Device* bmp280, uint8_t reg);
-static int16_t bmp280_bmp280ReadS16LE(Bmp280Device* bmp280, uint8_t reg);
 //static int16_t bmp280_bmp280ReadS16(Bmp280Device* bmp280, uint8_t reg);
 float bmp280_calcAltitude(Bmp280Device* bmp280);
 float bmp280_getPressure(Bmp280Device* bmp280);
 float bmp280_getTemperature(Bmp280Device* bmp280);
 uint8_t bmp280_init(Bmp280Device* bmp280);
-static void bmp280_writeRegister(Bmp280Device* bmp280, uint8_t reg, uint8_t val);
 
 #endif /* BMP280_H_ */

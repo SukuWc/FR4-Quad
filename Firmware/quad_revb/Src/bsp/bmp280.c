@@ -9,6 +9,13 @@
 #include "i2cif.h"
 #include "math.h"
 
+static uint16_t bmp280_bmp280Read16LE(Bmp280Device* bmp280, uint8_t reg);
+static uint16_t bmp280_bmp280Read16(Bmp280Device* bmp280, uint8_t reg);
+static int32_t bmp280_bmp280Read24(Bmp280Device* bmp280, uint8_t reg);
+static uint8_t bmp280_bmp280Read8(Bmp280Device* bmp280, uint8_t reg);
+static int16_t bmp280_bmp280ReadS16LE(Bmp280Device* bmp280, uint8_t reg);
+static void bmp280_writeRegister(Bmp280Device* bmp280, uint8_t reg, uint8_t val);
+
 uint8_t bmp280_init(Bmp280Device* bmp280)
 {
   while(bmp280_bmp280Read8(bmp280, BMP280_REG_CHIPID) != 0x58){}
